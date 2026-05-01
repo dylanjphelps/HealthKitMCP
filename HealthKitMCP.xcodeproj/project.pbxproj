@@ -11,6 +11,7 @@
 		467CE755AB96C382F002B9B3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D141A40F73E5D2F05F0596 /* main.swift */; };
 		54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE4495175C870FC90B419F /* Models.swift */; };
 		736618DA71A1243517A3AAA6 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 63267DFA5C0706B1A6CB09B0 /* MCP */; };
+		824ED6C6BD99DF573889B779 /* ListScheduledWorkoutsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0AE44CEFEAAE621317A529 /* ListScheduledWorkoutsTool.swift */; };
 		941BC7DA6DBE4A3E65615062 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBBD330BD887EC6A514B5F88 /* AuthView.swift */; };
 		C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */; };
 		CE523664A9C21A5C3A830FFE /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350ABF57745F56A56F651D35 /* Server.swift */; };
@@ -27,6 +28,7 @@
 		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7064B4297B3A50657303AD1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleWorkoutTool.swift; sourceTree = "<group>"; };
+		CA0AE44CEFEAAE621317A529 /* ListScheduledWorkoutsTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListScheduledWorkoutsTool.swift; sourceTree = "<group>"; };
 		EBBD330BD887EC6A514B5F88 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -64,6 +66,7 @@
 		8EFFAD087CABE727FE9CAAFC /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				CA0AE44CEFEAAE621317A529 /* ListScheduledWorkoutsTool.swift */,
 				BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */,
 			);
 			path = Tools;
@@ -171,6 +174,7 @@
 			files = (
 				EAEF8B7BCCA4790C6FA56BDE /* AppDelegate.swift in Sources */,
 				941BC7DA6DBE4A3E65615062 /* AuthView.swift in Sources */,
+				824ED6C6BD99DF573889B779 /* ListScheduledWorkoutsTool.swift in Sources */,
 				54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */,
 				1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */,
 				CE523664A9C21A5C3A830FFE /* Server.swift in Sources */,
@@ -252,7 +256,6 @@
 				CODE_SIGN_ENTITLEMENTS = HealthKitMCP/HealthKitMCP.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = DDBV754U66;
 				INFOPLIST_FILE = HealthKitMCP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -272,7 +275,6 @@
 				CODE_SIGN_ENTITLEMENTS = HealthKitMCP/HealthKitMCP.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = DDBV754U66;
 				INFOPLIST_FILE = HealthKitMCP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
