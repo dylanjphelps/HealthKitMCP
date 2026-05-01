@@ -5,10 +5,22 @@ options:
     macOS: "14.0"
   createIntermediateGroups: true
   xcodeVersion: "15"
+  settings:
+    base:
+      SWIFT_VERSION: "5.9"
 packages:
   swift-sdk:
     url: https://github.com/modelcontextprotocol/swift-sdk
     from: "0.1.0"
+schemes:
+  HealthKitMCP:
+    build:
+      targets:
+        HealthKitMCP: all
+    run:
+      config: Debug
+    archive:
+      config: Release
 targets:
   HealthKitMCP:
     type: application
@@ -24,6 +36,7 @@ targets:
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         INFOPLIST_FILE: ""
         CODE_SIGN_ENTITLEMENTS: HealthKitMCP/HealthKitMCP.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
     dependencies:
       - package: swift-sdk
         product: MCP
