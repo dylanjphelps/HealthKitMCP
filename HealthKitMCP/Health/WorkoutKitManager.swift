@@ -71,7 +71,7 @@ actor WorkoutKitManager {
     func schedule(_ workout: CustomWorkout, on scheduledDate: String? = nil) async {
         let plan = WorkoutPlan(.custom(workout))
         let resolved: Date
-        if let s = scheduledDate, let parsed = DateHelpers.isoDay.date(from: s) {
+        if let s = scheduledDate, let parsed = Self.isoDay.date(from: s) {
             resolved = parsed
         } else {
             resolved = Date()
@@ -79,6 +79,12 @@ actor WorkoutKitManager {
         let components = Calendar.current.dateComponents([.year, .month, .day], from: resolved)
         await WorkoutScheduler.shared.schedule(plan, at: components)
     }
+
+    private static let isoDay: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withFullDate]
+        return f
+    }()
 
     // MARK: - Alert helpers
 
