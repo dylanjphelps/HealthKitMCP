@@ -1,59 +1,33 @@
 // HealthKitMCP/App/AuthView.swift
 import SwiftUI
-import HealthKit
 
 struct AuthView: View {
-    @State private var statusMessage = "HealthKit authorization status unknown."
-    @State private var isAuthorized = false
-    @State private var isRequesting = false
-
-    private let healthKit = HealthKitManager()
-
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: isAuthorized ? "heart.fill" : "heart")
+            Image(systemName: "figure.run")
                 .font(.system(size: 48))
-                .foregroundColor(isAuthorized ? .green : .secondary)
+                .foregroundColor(.accentColor)
 
-            Text("HealthKit MCP")
+            Text("WorkoutKit MCP")
                 .font(.title2.bold())
 
-            Text(statusMessage)
+            Text("Schedules running workouts to Apple Watch via Claude Desktop.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            if !isAuthorized {
-                Button(isRequesting ? "Requesting…" : "Grant Access") {
-                    requestAuth()
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isRequesting)
-            }
+            Text("Add to Claude Desktop:")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Text(Bundle.main.executableURL?.path ?? "")
+                .font(.system(.caption, design: .monospaced))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
         }
         .padding(30)
         .frame(width: 420, height: 280)
-        .task { await checkStatus() }
-    }
-
-    private func checkStatus() async {
-        isAuthorized = await healthKit.isAuthorized()
-        statusMessage = isAuthorized
-            ? "Authorized. Claude Desktop can now query your health data."
-            : "Grant access so Claude Desktop can read your HealthKit data."
-    }
-
-    private func requestAuth() {
-        isRequesting = true
-        Task {
-            do {
-                try await healthKit.requestAuthorization()
-                await checkStatus()
-            } catch {
-                statusMessage = "Authorization failed: \(error.localizedDescription)"
-            }
-            isRequesting = false
-        }
     }
 }
