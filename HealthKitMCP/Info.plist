@@ -20,8 +20,6 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>NSHealthShareUsageDescription</key>
-	<string>HealthKitMCP reads your fitness data to answer questions from Claude.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

@@ -3,8 +3,7 @@ import AppKit
 import Foundation
 
 if CommandLine.arguments.contains("--mcp-stdio") {
-    let healthKit = HealthKitManager()
-    let mcpServer = HealthKitMCPServer(healthKit: healthKit)
+    let mcpServer = HealthKitMCPServer()
     RunLoop.main.perform {
         Task {
             do {
