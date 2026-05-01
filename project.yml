@@ -1,0 +1,36 @@
+name: HealthKitMCP
+options:
+  bundleIdPrefix: com.user
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  xcodeVersion: "15"
+packages:
+  swift-sdk:
+    url: https://github.com/modelcontextprotocol/swift-sdk
+    from: "0.1.0"
+targets:
+  HealthKitMCP:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: HealthKitMCP
+    entitlements:
+      path: HealthKitMCP/HealthKitMCP.entitlements
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        PRODUCT_BUNDLE_IDENTIFIER: com.user.HealthKitMCP
+        CODE_SIGN_STYLE: Automatic
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        INFOPLIST_FILE: ""
+    dependencies:
+      - package: swift-sdk
+        product: MCP
+    info:
+      path: HealthKitMCP/Info.plist
+      properties:
+        CFBundleDisplayName: HealthKitMCP
+        NSHealthShareUsageDescription: "HealthKitMCP reads your fitness data to answer questions from Claude."
+        NSPrincipalClass: NSApplication
