@@ -2,24 +2,68 @@
 import WorkoutKit
 import Foundation
 
+// MARK: - Step and Block specs (top-level, outside the actor)
+
+@available(macOS 15.0, *)
+struct StepSpec {
+    let goalType: String      // "time" | "distance"
+    let goalValue: Double     // minutes if time, km if distance
+    let targetPaceSecPerKm: Double?
+    let targetHeartRateBpm: Double?
+
+    var workoutGoal: WorkoutGoal {
+        goalType == "distance"
+            ? .distance(goalValue * 1000, .meters)
+            : .time(goalValue * 60, .seconds)
+    }
+}
+
+@available(macOS 15.0, *)
+struct BlockSpec {
+    let repeatCount: Int
+    let work: StepSpec
+    let rest: StepSpec?
+}
+
+// MARK: - Manager
+
 @available(macOS 15.0, *)
 actor WorkoutKitManager {
 
-    func buildAndDescribe(
-        type: String,
+    /// Builds a CustomWorkout from the blocks-based schema and returns a human-readable description.
+    func buildCustom(
         title: String,
-        params: [String: Any]
-    ) throws -> (workout: CustomWorkout, description: String) {
-        switch type {
-        case "easy":
-            return try buildEasy(title: title, params: params)
-        case "tempo":
-            return try buildTempo(title: title, params: params)
-        case "interval":
-            return try buildInterval(title: title, params: params)
-        default:
-            throw WorkoutError.invalidType(type)
+        warmup: StepSpec?,
+        blocks: [BlockSpec],
+        cooldown: StepSpec?
+    ) throws -> (CustomWorkout, String) {
+        guard !blocks.isEmpty else {
+            throw WorkoutError.invalidType("blocks array must not be empty")
         }
+
+        let warmupStep = warmup.map { WorkoutStep(goal: $0.workoutGoal, alert: alert(for: $0)) }
+        let cooldownStep = cooldown.map { WorkoutStep(goal: $0.workoutGoal, alert: alert(for: $0)) }
+
+        let intervalBlocks: [IntervalBlock] = blocks.map { block in
+            let workStep = IntervalStep(.work, goal: block.work.workoutGoal, alert: alert(for: block.work))
+            var steps: [IntervalStep] = [workStep]
+            if let rest = block.rest {
+                steps.append(IntervalStep(.recovery, goal: rest.workoutGoal, alert: alert(for: rest)))
+            }
+            return IntervalBlock(steps: steps, iterations: block.repeatCount)
+        }
+
+        let workout = CustomWorkout(
+            activity: .running,
+            location: .outdoor,
+            displayName: title,
+            warmup: warmupStep,
+            blocks: intervalBlocks,
+            cooldown: cooldownStep
+        )
+
+        let description = describeCustomWorkout(title: title, warmup: warmup, blocks: blocks, cooldown: cooldown)
+        return (workout, description)
     }
 
     /// Wraps the CustomWorkout in a WorkoutPlan and schedules it for today via WorkoutScheduler.
@@ -29,107 +73,17 @@ actor WorkoutKitManager {
         await WorkoutScheduler.shared.schedule(plan, at: date)
     }
 
-    // MARK: - Builders
+    // MARK: - Alert helpers
 
-    private func buildEasy(title: String, params: [String: Any]) throws -> (CustomWorkout, String) {
-        let goalType = params["goal_type"] as? String ?? "time"
-        let goalValue = params["goal_value"] as? Double ?? 30
-
-        let goal: WorkoutGoal
-        switch goalType {
-        case "distance": goal = .distance(goalValue * 1000, .meters)
-        case "open": goal = .open
-        default: goal = .time(goalValue * 60, .seconds)
+    /// Returns the appropriate WorkoutAlert for a step, preferring HR over pace.
+    private func alert(for step: StepSpec) -> (any WorkoutAlert)? {
+        if let bpm = step.targetHeartRateBpm {
+            return heartRateAlert(bpm: bpm)
+        } else if let pace = step.targetPaceSecPerKm {
+            return paceAlert(paceSecPerKm: pace, toleranceSec: 10)
         }
-
-        // IntervalStep uses a positional first argument for purpose (no label)
-        let step = IntervalStep(.work, goal: goal, alert: nil)
-        let workout = CustomWorkout(
-            activity: .running,
-            location: .outdoor,
-            displayName: title,
-            warmup: nil,
-            blocks: [IntervalBlock(steps: [step], iterations: 1)],
-            cooldown: nil
-        )
-
-        let description: String
-        switch goalType {
-        case "distance": description = "Easy run: \(goalValue) km"
-        case "open": description = "Easy run: open goal"
-        default: description = "Easy run: \(Int(goalValue)) minutes"
-        }
-
-        return (workout, description)
+        return nil
     }
-
-    private func buildTempo(title: String, params: [String: Any]) throws -> (CustomWorkout, String) {
-        let warmupMin = params["warmup_minutes"] as? Double ?? 5
-        let tempoKm = params["tempo_distance_km"] as? Double ?? 3
-        let paceSecPerKm = params["target_pace_seconds_per_km"] as? Double ?? 270
-        let cooldownMin = params["cooldown_minutes"] as? Double ?? 5
-
-        // WorkoutKit has no pace alert; use SpeedRangeAlert with m/s (speed = 1000 / pace_sec_per_km)
-        let speedAlert = paceAlert(paceSecPerKm: paceSecPerKm, toleranceSec: 10)
-
-        let warmup = WorkoutStep(goal: .time(warmupMin * 60, .seconds), alert: nil)
-        let tempoStep = IntervalStep(
-            .work,
-            goal: .distance(tempoKm * 1000, .meters),
-            alert: speedAlert
-        )
-        let cooldown = WorkoutStep(goal: .time(cooldownMin * 60, .seconds), alert: nil)
-
-        let workout = CustomWorkout(
-            activity: .running,
-            location: .outdoor,
-            displayName: title,
-            warmup: warmup,
-            blocks: [IntervalBlock(steps: [tempoStep], iterations: 1)],
-            cooldown: cooldown
-        )
-
-        let description = "Tempo run: \(Int(warmupMin))min warmup → \(tempoKm)km at \(formatPace(paceSecPerKm))/km → \(Int(cooldownMin))min cooldown"
-        return (workout, description)
-    }
-
-    private func buildInterval(title: String, params: [String: Any]) throws -> (CustomWorkout, String) {
-        let warmupMin = params["warmup_minutes"] as? Double ?? 5
-        let repeatCount = params["repeat_count"] as? Int ?? 6
-        let workMeters = params["work_distance_meters"] as? Double ?? 400
-        let restMeters = params["rest_distance_meters"] as? Double ?? 200
-        let paceSecPerKm = params["target_pace_seconds_per_km"] as? Double ?? 240
-        let cooldownMin = params["cooldown_minutes"] as? Double ?? 5
-
-        let speedAlert = paceAlert(paceSecPerKm: paceSecPerKm, toleranceSec: 10)
-
-        let warmup = WorkoutStep(goal: .time(warmupMin * 60, .seconds), alert: nil)
-        let workStep = IntervalStep(
-            .work,
-            goal: .distance(workMeters, .meters),
-            alert: speedAlert
-        )
-        let restStep = IntervalStep(
-            .recovery,
-            goal: .distance(restMeters, .meters),
-            alert: nil
-        )
-        let cooldown = WorkoutStep(goal: .time(cooldownMin * 60, .seconds), alert: nil)
-
-        let workout = CustomWorkout(
-            activity: .running,
-            location: .outdoor,
-            displayName: title,
-            warmup: warmup,
-            blocks: [IntervalBlock(steps: [workStep, restStep], iterations: repeatCount)],
-            cooldown: cooldown
-        )
-
-        let description = "Interval run: \(Int(warmupMin))min warmup → \(repeatCount)×(\(Int(workMeters))m at \(formatPace(paceSecPerKm))/km + \(Int(restMeters))m recovery) → \(Int(cooldownMin))min cooldown"
-        return (workout, description)
-    }
-
-    // MARK: - Helpers
 
     /// Converts a target pace (seconds/km) ± tolerance into a SpeedRangeAlert (m/s).
     /// WorkoutKit does not expose a pace alert; speed = 1000 / paceSecPerKm.
@@ -146,6 +100,62 @@ actor WorkoutKitManager {
         )
     }
 
+    /// Creates a HeartRateRangeAlert centered on bpm with ±5 BPM tolerance.
+    /// Uses the static convenience initializer: .heartRate(_ range: ClosedRange<Double>, unit: UnitFrequency)
+    private func heartRateAlert(bpm: Double) -> HeartRateRangeAlert {
+        return .heartRate((bpm - 5)...(bpm + 5))
+    }
+
+    // MARK: - Description
+
+    private func describeCustomWorkout(
+        title: String,
+        warmup: StepSpec?,
+        blocks: [BlockSpec],
+        cooldown: StepSpec?
+    ) -> String {
+        var parts: [String] = []
+
+        if let w = warmup {
+            parts.append(describeStep(w, label: "warmup"))
+        }
+
+        for block in blocks {
+            let workDesc = describeStepShort(block.work)
+            if let rest = block.rest {
+                let restDesc = describeStepShort(rest)
+                let blockDesc = block.repeatCount > 1
+                    ? "\(block.repeatCount)×(\(workDesc) + \(restDesc) recovery)"
+                    : "(\(workDesc) + \(restDesc) recovery)"
+                parts.append(blockDesc)
+            } else {
+                let blockDesc = block.repeatCount > 1
+                    ? "\(block.repeatCount)×\(workDesc)"
+                    : workDesc
+                parts.append(blockDesc)
+            }
+        }
+
+        if let c = cooldown {
+            parts.append(describeStep(c, label: "cooldown"))
+        }
+
+        return parts.joined(separator: " → ")
+    }
+
+    private func describeStep(_ step: StepSpec, label: String) -> String {
+        let goalDesc = step.goalType == "distance"
+            ? "\(step.goalValue)km"
+            : "\(step.goalValue)min"
+        return "\(goalDesc) \(label)"
+    }
+
+    private func describeStepShort(_ step: StepSpec) -> String {
+        return step.goalType == "distance"
+            ? "\(step.goalValue)km"
+            : "\(step.goalValue)min"
+    }
+
     private func formatPace(_ secondsPerKm: Double) -> String {
         let min = Int(secondsPerKm) / 60
         let sec = Int(secondsPerKm) % 60
@@ -159,7 +169,7 @@ enum WorkoutError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidType(let t):
-            return "Unknown workout_type '\(t)'. Must be easy, tempo, or interval."
+            return "Unknown workout type: \(t)"
         }
     }
 }

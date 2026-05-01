@@ -140,62 +140,67 @@ actor HealthKitMCPServer {
             ),
             Tool(
                 name: "schedule_workout",
-                description: "Schedule a running workout for today using WorkoutKit. Supports easy, tempo, and interval workouts. Use dry_run=true to validate without scheduling.",
+                description: "Schedule a running workout for today using WorkoutKit. Define the workout as an ordered list of blocks — each block is a set of work/rest steps repeated N times. Supports any workout structure: easy runs, intervals, tempo, hill repeats, or complex multi-phase sessions.",
                 inputSchema: .object([
                     "type": .string("object"),
                     "properties": .object([
-                        "workout_type": .object([
-                            "type": .string("string"),
-                            "enum": .array([.string("easy"), .string("tempo"), .string("interval")]),
-                            "description": .string("Type of workout to schedule.")
-                        ]),
                         "title": .object([
                             "type": .string("string"),
-                            "description": .string("Display name for the workout.")
+                            "description": .string("Workout name shown on Apple Watch.")
                         ]),
-                        "goal_type": .object([
-                            "type": .string("string"),
-                            "enum": .array([.string("distance"), .string("time"), .string("open")]),
-                            "description": .string("Workout goal type: distance (km), time (minutes), or open (no goal).")
+                        "warmup": .object([
+                            "type": .string("object"),
+                            "description": .string("Optional warmup step before the main blocks."),
+                            "properties": .object([
+                                "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
+                                "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
+                                "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Target HR center point (±5 BPM range alert).")])
+                            ])
                         ]),
-                        "goal_value": .object([
-                            "type": .string("number"),
-                            "description": .string("Goal value: km if goal_type is distance, minutes if time.")
+                        "blocks": .object([
+                            "type": .string("array"),
+                            "description": .string("Ordered workout blocks. Each block repeats its work/rest steps N times."),
+                            "items": .object([
+                                "type": .string("object"),
+                                "properties": .object([
+                                    "repeat_count": .object(["type": .string("number"), "description": .string("Repetitions (default 1 for single steps).")]),
+                                    "work": .object([
+                                        "type": .string("object"),
+                                        "description": .string("Work step definition."),
+                                        "properties": .object([
+                                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
+                                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
+                                            "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Target HR center point (±5 BPM range alert). Preferred over pace if both given.")]),
+                                            "target_pace_seconds_per_km": .object(["type": .string("number"), "description": .string("Target pace in sec/km (±10 sec/km range alert).")])
+                                        ])
+                                    ]),
+                                    "rest": .object([
+                                        "type": .string("object"),
+                                        "description": .string("Optional recovery step after each work step."),
+                                        "properties": .object([
+                                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
+                                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
+                                            "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Optional HR target for recovery.")])
+                                        ])
+                                    ])
+                                ])
+                            ])
                         ]),
-                        "warmup_minutes": .object([
-                            "type": .string("number"),
-                            "description": .string("(easy/tempo) Warmup duration in minutes.")
-                        ]),
-                        "tempo_distance_km": .object([
-                            "type": .string("number"),
-                            "description": .string("(tempo only) Tempo segment distance in km.")
-                        ]),
-                        "target_pace_seconds_per_km": .object([
-                            "type": .string("number"),
-                            "description": .string("(tempo/interval) Target pace in seconds per km.")
-                        ]),
-                        "cooldown_minutes": .object([
-                            "type": .string("number"),
-                            "description": .string("(easy/tempo) Cooldown duration in minutes.")
-                        ]),
-                        "repeat_count": .object([
-                            "type": .string("number"),
-                            "description": .string("(interval only) Number of work/rest repetitions.")
-                        ]),
-                        "work_distance_meters": .object([
-                            "type": .string("number"),
-                            "description": .string("(interval only) Work interval distance in meters.")
-                        ]),
-                        "rest_distance_meters": .object([
-                            "type": .string("number"),
-                            "description": .string("(interval only) Rest interval distance in meters.")
+                        "cooldown": .object([
+                            "type": .string("object"),
+                            "description": .string("Optional cooldown step after the main blocks. Same shape as warmup."),
+                            "properties": .object([
+                                "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
+                                "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
+                                "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Target HR center point (±5 BPM range alert).")])
+                            ])
                         ]),
                         "dry_run": .object([
                             "type": .string("boolean"),
-                            "description": .string("If true, validate and describe the workout without scheduling it. Defaults to false.")
+                            "description": .string("If true, validate and describe the workout without scheduling. Default false.")
                         ])
                     ]),
-                    "required": .array([.string("workout_type"), .string("title")])
+                    "required": .array([.string("title"), .string("blocks")])
                 ])
             )
         ]
