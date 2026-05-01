@@ -16,8 +16,6 @@ targets:
     deploymentTarget: "14.0"
     sources:
       - path: HealthKitMCP
-    entitlements:
-      path: HealthKitMCP/HealthKitMCP.entitlements
     settings:
       base:
         SWIFT_VERSION: "5.9"
@@ -25,6 +23,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         INFOPLIST_FILE: ""
+        CODE_SIGN_ENTITLEMENTS: HealthKitMCP/HealthKitMCP.entitlements
     dependencies:
       - package: swift-sdk
         product: MCP
