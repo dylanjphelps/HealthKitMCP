@@ -66,11 +66,18 @@ actor WorkoutKitManager {
         return (workout, description)
     }
 
-    /// Wraps the CustomWorkout in a WorkoutPlan and schedules it for today via WorkoutScheduler.
-    func schedule(_ workout: CustomWorkout) async throws {
+    /// Wraps the CustomWorkout in a WorkoutPlan and schedules it via WorkoutScheduler.
+    /// scheduledDate: ISO 8601 date string (YYYY-MM-DD). Defaults to today if nil or unparseable.
+    func schedule(_ workout: CustomWorkout, on scheduledDate: String? = nil) async {
         let plan = WorkoutPlan(.custom(workout))
-        let date = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        await WorkoutScheduler.shared.schedule(plan, at: date)
+        let resolved: Date
+        if let s = scheduledDate, let parsed = DateHelpers.isoDay.date(from: s) {
+            resolved = parsed
+        } else {
+            resolved = Date()
+        }
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: resolved)
+        await WorkoutScheduler.shared.schedule(plan, at: components)
     }
 
     // MARK: - Alert helpers

@@ -195,6 +195,10 @@ actor HealthKitMCPServer {
                                 "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Target HR center point (±5 BPM range alert).")])
                             ])
                         ]),
+                        "scheduled_date": .object([
+                            "type": .string("string"),
+                            "description": .string("Date to schedule the workout in YYYY-MM-DD format. Defaults to today.")
+                        ]),
                         "dry_run": .object([
                             "type": .string("boolean"),
                             "description": .string("If true, validate and describe the workout without scheduling. Default false.")
