@@ -50,6 +50,12 @@ enum DateHelpers {
     }
 }
 
+// Typed error for HealthKit query failures — allows use in Result<T, HKMCPError>
+struct HKMCPError: Error, LocalizedError {
+    let message: String
+    var errorDescription: String? { message }
+}
+
 // JSON encoding helper used by all tool handlers
 func encodeToJSON<T: Encodable>(_ value: T) throws -> String {
     let data = try JSONEncoder().encode(value)
