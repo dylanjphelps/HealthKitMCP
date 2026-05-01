@@ -166,7 +166,7 @@ actor HealthKitMCPServer {
                         ]),
                         "goal_value": .object([
                             "type": .string("number"),
-                            "description": .string("(easy only) Goal value: km if distance, minutes if time.")
+                            "description": .string("Goal value: km if goal_type is distance, minutes if time.")
                         ]),
                         "warmup_minutes": .object([
                             "type": .string("number"),
