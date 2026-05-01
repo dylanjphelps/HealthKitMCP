@@ -13,7 +13,7 @@ actor HealthKitMCPServer {
         self.healthKit = healthKit
         self.transport = StdioTransport()
         self.server = Server(
-            name: "healthkit-mcp",
+            name: "HealthKitMCP",
             version: "1.0.0",
             capabilities: Server.Capabilities(
                 tools: .init(listChanged: false)
@@ -53,11 +53,11 @@ actor HealthKitMCPServer {
                 text = try await WorkoutQueryTool.handle(args: args, healthKit: healthKit)
             case "query_activity_summary":
                 text = try await ActivitySummaryTool.handle(args: args, healthKit: healthKit)
-            case "query_heart_rate":
+            case "query_resting_heart_rate":
                 text = try await HeartRateTool.handle(args: args, healthKit: healthKit)
             case "query_vo2max":
                 text = try await VO2MaxTool.handle(healthKit: healthKit)
-            case "schedule_running_workout":
+            case "schedule_workout":
                 text = try await ScheduleWorkoutTool.handle(args: args)
             default:
                 return CallTool.Result(
@@ -118,7 +118,7 @@ actor HealthKitMCPServer {
                 ])
             ),
             Tool(
-                name: "query_heart_rate",
+                name: "query_resting_heart_rate",
                 description: "Query daily resting heart rate records from HealthKit.",
                 inputSchema: .object([
                     "type": .string("object"),
@@ -145,7 +145,7 @@ actor HealthKitMCPServer {
                 ])
             ),
             Tool(
-                name: "schedule_running_workout",
+                name: "schedule_workout",
                 description: "Schedule a running workout using WorkoutKit. Supports easy, tempo, and interval workouts. Use dry_run=true to validate without scheduling.",
                 inputSchema: .object([
                     "type": .string("object"),
@@ -161,8 +161,8 @@ actor HealthKitMCPServer {
                         ]),
                         "goal_type": .object([
                             "type": .string("string"),
-                            "enum": .array([.string("distance"), .string("time")]),
-                            "description": .string("(easy only) Whether the goal is distance or time.")
+                            "enum": .array([.string("distance"), .string("time"), .string("open")]),
+                            "description": .string("Workout goal type: distance (km), time (minutes), or open (no goal).")
                         ]),
                         "goal_value": .object([
                             "type": .string("number"),
@@ -170,7 +170,7 @@ actor HealthKitMCPServer {
                         ]),
                         "warmup_minutes": .object([
                             "type": .string("number"),
-                            "description": .string("(tempo/interval) Warmup duration in minutes.")
+                            "description": .string("(easy/tempo) Warmup duration in minutes.")
                         ]),
                         "tempo_distance_km": .object([
                             "type": .string("number"),
@@ -182,7 +182,7 @@ actor HealthKitMCPServer {
                         ]),
                         "cooldown_minutes": .object([
                             "type": .string("number"),
-                            "description": .string("(tempo/interval) Cooldown duration in minutes.")
+                            "description": .string("(easy/tempo) Cooldown duration in minutes.")
                         ]),
                         "repeat_count": .object([
                             "type": .string("number"),
