@@ -41,9 +41,9 @@ enum ScheduleWorkoutTool {
     private static func parseStepSpec(from value: Value?) -> StepSpec? {
         guard let value, case .object(let obj) = value else { return nil }
         let goalType = obj["goal_type"]?.stringValue ?? "time"
-        let goalValue = obj["goal_value"].flatMap { Double($0) } ?? 0
-        let pace = obj["target_pace_seconds_per_km"].flatMap { Double($0) }
-        let hr = obj["target_heart_rate_bpm"].flatMap { Double($0) }
+        let goalValue = obj["goal_value"]?.doubleValue ?? obj["goal_value"]?.intValue.map(Double.init) ?? 0
+        let pace = obj["target_pace_seconds_per_km"]?.doubleValue ?? obj["target_pace_seconds_per_km"]?.intValue.map(Double.init)
+        let hr = obj["target_heart_rate_bpm"]?.doubleValue ?? obj["target_heart_rate_bpm"]?.intValue.map(Double.init)
         return StepSpec(goalType: goalType, goalValue: goalValue, targetPaceSecPerKm: pace, targetHeartRateBpm: hr)
     }
 
