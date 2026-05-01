@@ -30,10 +30,10 @@ enum ListScheduledWorkoutsTool {
         let records = plans.compactMap { scheduled -> ScheduledPlanRecord? in
             guard case .custom(let workout) = scheduled.plan.workout else { return nil }
             let dateStr: String
-            if let date = Calendar.current.date(from: scheduled.scheduledDate) {
+            if let date = Calendar.current.date(from: scheduled.date) {
                 dateStr = isoDay.string(from: date)
             } else {
-                dateStr = "\(scheduled.scheduledDate)"
+                dateStr = "\(scheduled.date)"
             }
             return ScheduledPlanRecord(title: workout.displayName, date: dateStr)
         }

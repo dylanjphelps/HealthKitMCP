@@ -72,6 +72,7 @@ actor WorkoutKitManager {
         case .notDetermined: return "notDetermined"
         case .authorized:    return "authorized"
         case .denied:        return "denied"
+        case .restricted:    return "restricted"
         @unknown default:    return "unknown"
         }
     }
@@ -99,7 +100,7 @@ actor WorkoutKitManager {
 
     /// Returns all currently scheduled workout plans.
     func listScheduled() async -> [ScheduledWorkoutPlan] {
-        await WorkoutScheduler.shared.workoutPlans
+        await WorkoutScheduler.shared.scheduledWorkouts
     }
 
     private static let isoDay: ISO8601DateFormatter = {
