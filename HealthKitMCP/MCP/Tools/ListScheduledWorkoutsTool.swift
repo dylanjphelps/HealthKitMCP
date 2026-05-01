@@ -35,7 +35,7 @@ enum ListScheduledWorkoutsTool {
             } else {
                 dateStr = "\(scheduled.date)"
             }
-            return ScheduledPlanRecord(title: workout.displayName, date: dateStr)
+            return ScheduledPlanRecord(title: workout.displayName ?? "(untitled)", date: dateStr)
         }
 
         return try encodeToJSON(Result(
