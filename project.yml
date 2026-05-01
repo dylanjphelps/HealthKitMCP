@@ -43,5 +43,4 @@ targets:
       path: HealthKitMCP/Info.plist
       properties:
         CFBundleDisplayName: HealthKitMCP
-        NSHealthShareUsageDescription: "HealthKitMCP reads your fitness data to answer questions from Claude."
         NSPrincipalClass: NSApplication
