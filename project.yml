@@ -2,7 +2,7 @@ name: HealthKitMCP
 options:
   bundleIdPrefix: com.user
   deploymentTarget:
-    macOS: "14.0"
+    macOS: "15.0"
   createIntermediateGroups: true
   xcodeVersion: "15"
   settings:
@@ -25,7 +25,7 @@ targets:
   HealthKitMCP:
     type: application
     platform: macOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - path: HealthKitMCP
     settings:
@@ -33,7 +33,7 @@ targets:
         SWIFT_VERSION: "5.9"
         PRODUCT_BUNDLE_IDENTIFIER: com.user.HealthKitMCP
         CODE_SIGN_STYLE: Automatic
-        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
         INFOPLIST_FILE: ""
         CODE_SIGN_ENTITLEMENTS: HealthKitMCP/HealthKitMCP.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: ""
