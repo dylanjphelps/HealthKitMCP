@@ -23,15 +23,21 @@ actor HealthKitManager {
         try await store.requestAuthorization(toShare: [], read: readTypes)
     }
 
-    func isAuthorized() -> Bool {
-        store.authorizationStatus(for: HKQuantityType(.stepCount)) == .sharingAuthorized
+    // Returns true if the user has been shown the authorization prompt.
+    // HealthKit does not distinguish between "authorized" and "denied" for read-only
+    // types — both appear as .unnecessary after the prompt has been shown once.
+    func isAuthorized() async -> Bool {
+        guard Self.isAvailable else { return false }
+        let status = try? await store.statusForAuthorizationRequest(toShare: [], read: readTypes)
+        return status == .unnecessary
     }
 
-    func guardAvailableAndAuthorized() -> String? {
+    private func guardAvailableAndAuthorized() async throws -> String? {
         guard Self.isAvailable else {
             return "HealthKit is not available on this device"
         }
-        guard isAuthorized() else {
+        let status = try await store.statusForAuthorizationRequest(toShare: [], read: readTypes)
+        if status == .shouldRequest {
             return "HealthKit authorization not granted — open HealthKitMCP.app to authorize"
         }
         return nil
@@ -40,9 +46,11 @@ actor HealthKitManager {
     // MARK: - Workout Query
 
     func queryWorkouts(from startDate: Date, to endDate: Date) async throws -> Result<[WorkoutRecord], String> {
-        if let error = guardAvailableAndAuthorized() { return .failure(error) }
+        if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let datePredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let runningPredicate = HKQuery.predicateForWorkouts(with: .running)
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, runningPredicate])
         let sortDescriptors = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
 
         let samples: [HKSample] = try await withCheckedThrowingContinuation { continuation in
@@ -58,9 +66,7 @@ actor HealthKitManager {
             store.execute(query)
         }
 
-        let records = (samples as? [HKWorkout] ?? [])
-            .filter { $0.workoutActivityType == .running }
-            .map { self.toWorkoutRecord($0) }
+        let records = (samples as? [HKWorkout] ?? []).map { self.toWorkoutRecord($0) }
 
         if records.isEmpty {
             return .failure("No data found for the requested date range")
@@ -69,12 +75,15 @@ actor HealthKitManager {
     }
 
     private func toWorkoutRecord(_ workout: HKWorkout) -> WorkoutRecord {
-        let distanceKm = workout.totalDistance?.doubleValue(for: .meterUnit(with: .kilo)) ?? 0
+        let distanceStats = workout.statistics(for: HKQuantityType(.distanceWalkingRunning))
+        let energyStats = workout.statistics(for: HKQuantityType(.activeEnergyBurned))
+        let hrStats = workout.statistics(for: HKQuantityType(.heartRate))
+
+        let distanceKm = distanceStats?.sumQuantity()?.doubleValue(for: .meterUnit(with: .kilo)) ?? 0
         let durationMin = workout.duration / 60
         let paceSecPerKm = distanceKm > 0 ? workout.duration / distanceKm : 0
-        let calories = workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
+        let calories = energyStats?.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
 
-        let hrStats = workout.statistics(for: HKQuantityType(.heartRate))
         let bpm = HKUnit.count().unitDivided(by: .minute())
         let avgHR = hrStats?.averageQuantity()?.doubleValue(for: bpm)
         let maxHR = hrStats?.maximumQuantity()?.doubleValue(for: bpm)
@@ -93,7 +102,7 @@ actor HealthKitManager {
     // MARK: - Activity Summary
 
     func queryActivitySummary(from startDate: Date, to endDate: Date) async throws -> Result<[ActivitySummaryRecord], String> {
-        if let error = guardAvailableAndAuthorized() { return .failure(error) }
+        if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
         var intervalComponents = DateComponents()
         intervalComponents.day = 1
@@ -127,9 +136,6 @@ actor HealthKitManager {
             date = calendar.date(byAdding: .day, value: 1, to: date) ?? endDay
         }
 
-        if records.allSatisfy({ $0.steps == 0 && $0.active_energy_kcal == 0 && $0.exercise_minutes == 0 }) {
-            return .failure("No data found for the requested date range")
-        }
         return .success(records)
     }
 
@@ -163,7 +169,7 @@ actor HealthKitManager {
     // MARK: - Heart Rate
 
     func queryRestingHeartRate(from startDate: Date, to endDate: Date) async throws -> Result<[HeartRateRecord], String> {
-        if let error = guardAvailableAndAuthorized() { return .failure(error) }
+        if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
         var intervalComponents = DateComponents()
         intervalComponents.day = 1
@@ -220,7 +226,7 @@ actor HealthKitManager {
     // MARK: - VO2 Max
 
     func queryVO2Max() async throws -> Result<VO2MaxRecord, String> {
-        if let error = guardAvailableAndAuthorized() { return .failure(error) }
+        if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
         let vo2Type = HKQuantityType(.vo2Max)
         let sortDescriptors = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
@@ -239,7 +245,7 @@ actor HealthKitManager {
         }
 
         guard let sample = samples.first as? HKQuantitySample else {
-            return .failure("No data found for the requested date range")
+            return .failure("No VO2 max data available — this value is recorded by Apple Watch during outdoor runs.")
         }
 
         let unit = HKUnit.literUnit(with: .milli)
