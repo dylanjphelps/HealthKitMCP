@@ -41,7 +41,7 @@ enum DateHelpers {
 
     static func defaultRange() -> (start: Date, end: Date) {
         let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -14, to: end)!
+        let start = Calendar.current.date(byAdding: .day, value: -14, to: end) ?? end
         return (start, end)
     }
 
@@ -53,5 +53,5 @@ enum DateHelpers {
 // JSON encoding helper used by all tool handlers
 func encodeToJSON<T: Encodable>(_ value: T) throws -> String {
     let data = try JSONEncoder().encode(value)
-    return String(data: data, encoding: .utf8)!
+    return String(decoding: data, as: UTF8.self)
 }
