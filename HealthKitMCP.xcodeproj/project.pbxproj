@@ -7,14 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE4495175C870FC90B419F /* Models.swift */; };
+		6000C221EB63A175CEC457A7 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */; };
 		736618DA71A1243517A3AAA6 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 63267DFA5C0706B1A6CB09B0 /* MCP */; };
 		BA380EFB8C47CC8B59DF7E5F /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7064B4297B3A50657303AD1A /* Info.plist */; };
+		C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutKitManager.swift; sourceTree = "<group>"; };
 		65999B87C71D2C185970863A /* HealthKitMCP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthKitMCP.entitlements; sourceTree = "<group>"; };
+		6FDE4495175C870FC90B419F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7064B4297B3A50657303AD1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,11 +50,22 @@
 			);
 			sourceTree = "<group>";
 		};
+		D16AEA143BDB13399F4EF44A /* Health */ = {
+			isa = PBXGroup;
+			children = (
+				FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */,
+				6FDE4495175C870FC90B419F /* Models.swift */,
+				1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */,
+			);
+			path = Health;
+			sourceTree = "<group>";
+		};
 		DED9C9BE904DBFA75E592466 /* HealthKitMCP */ = {
 			isa = PBXGroup;
 			children = (
 				65999B87C71D2C185970863A /* HealthKitMCP.entitlements */,
 				7064B4297B3A50657303AD1A /* Info.plist */,
+				D16AEA143BDB13399F4EF44A /* Health */,
 				4450FC408BF4E023D260EA34 /* MCP */,
 			);
 			path = HealthKitMCP;
@@ -137,6 +154,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6000C221EB63A175CEC457A7 /* HealthKitManager.swift in Sources */,
+				54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */,
+				C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -194,7 +214,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -218,7 +238,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.user.HealthKitMCP;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
@@ -237,7 +257,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.user.HealthKitMCP;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
@@ -289,7 +309,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
