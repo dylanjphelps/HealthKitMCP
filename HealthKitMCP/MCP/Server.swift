@@ -28,13 +28,7 @@ actor HealthKitMCPServer {
         }
 
         // Register tools/call handler
-        await server.withMethodHandler(CallTool.self) { [weak self] params in
-            guard let self = self else {
-                return CallTool.Result(
-                    content: [.text(text: "Server deallocated", annotations: nil, _meta: nil)],
-                    isError: true
-                )
-            }
+        await server.withMethodHandler(CallTool.self) { [self] params in
             return await self.handleToolCall(params)
         }
 

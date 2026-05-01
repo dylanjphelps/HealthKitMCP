@@ -127,15 +127,21 @@ actor HealthKitManager {
             let energy = energyCollection.statistics(for: date)?.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
             let exercise = exerciseCollection.statistics(for: date)?.sumQuantity()?.doubleValue(for: .minute()) ?? 0
 
-            records.append(ActivitySummaryRecord(
-                date: DateHelpers.isoDay.string(from: date),
-                steps: Int(steps),
-                active_energy_kcal: energy,
-                exercise_minutes: Int(exercise)
-            ))
-            date = calendar.date(byAdding: .day, value: 1, to: date) ?? endDay
+            if steps > 0 || energy > 0 || exercise > 0 {
+                records.append(ActivitySummaryRecord(
+                    date: DateHelpers.isoDay.string(from: date),
+                    steps: Int(steps),
+                    active_energy_kcal: energy,
+                    exercise_minutes: Int(exercise)
+                ))
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
+            date = next
         }
 
+        if records.isEmpty {
+            return .failure(HKMCPError(message: "No data found for the requested date range"))
+        }
         return .success(records)
     }
 
@@ -214,7 +220,8 @@ actor HealthKitManager {
                     max_resting_hr_bpm: max
                 ))
             }
-            date = calendar.date(byAdding: .day, value: 1, to: date) ?? endDay
+            guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
+            date = next
         }
 
         if records.isEmpty {
