@@ -13,6 +13,7 @@ enum ScheduleWorkoutTool {
         }
 
         let dryRun = args["dry_run"]?.boolValue ?? false
+        let scheduledDate = args["scheduled_date"]?.stringValue
 
         let warmup = parseStepSpec(from: args["warmup"])
         let cooldown = parseStepSpec(from: args["cooldown"])
@@ -34,8 +35,8 @@ enum ScheduleWorkoutTool {
             return try encodeToJSON(DryRunResult(scheduled: false, valid: true, workout_description: description))
         }
 
-        try await manager.schedule(workout)
-        return try encodeToJSON(ScheduleResult(scheduled: true, title: title))
+        await manager.schedule(workout, on: scheduledDate)
+        return try encodeToJSON(ScheduleResult(scheduled: true, title: title, date: scheduledDate ?? "today"))
     }
 
     private static func parseStepSpec(from value: Value?) -> StepSpec? {
@@ -74,4 +75,5 @@ private struct DryRunResult: Encodable {
 private struct ScheduleResult: Encodable {
     let scheduled: Bool
     let title: String
+    let date: String
 }
