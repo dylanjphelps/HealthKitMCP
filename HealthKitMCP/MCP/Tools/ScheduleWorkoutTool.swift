@@ -2,72 +2,64 @@
 import Foundation
 import MCP
 
+@available(macOS 15.0, *)
 enum ScheduleWorkoutTool {
     static func handle(args: [String: Value]) async throws -> String {
-        guard #available(macOS 15.0, *) else {
-            return "WorkoutKit is not available on this macOS version. macOS 15.0 or later is required."
+        let title = args["title"]?.stringValue ?? ""
+        guard !title.isEmpty else { return "Missing required parameter: title" }
+
+        guard let blocksValue = args["blocks"], case .array(let blockArray) = blocksValue, !blockArray.isEmpty else {
+            return "Missing required parameter: blocks (must be a non-empty array)"
         }
 
-        let workoutType = args["workout_type"]?.stringValue ?? ""
-        let title = args["title"]?.stringValue ?? ""
         let dryRun = args["dry_run"]?.boolValue ?? false
 
-        guard !workoutType.isEmpty else {
-            return "Missing required parameter: workout_type"
+        let warmup = parseStepSpec(from: args["warmup"])
+        let cooldown = parseStepSpec(from: args["cooldown"])
+        let blocks = blockArray.compactMap { parseBlockSpec(from: $0) }
+
+        guard !blocks.isEmpty else {
+            return "blocks array contained no valid block objects"
         }
-        guard !title.isEmpty else {
-            return "Missing required parameter: title"
-        }
-
-        // Build a [String: Any] params dictionary from MCP Value args
-        var params: [String: Any] = [:]
-
-        if let v = args["goal_type"]?.stringValue { params["goal_type"] = v }
-        if let v = args["goal_value"]?.doubleValue { params["goal_value"] = v }
-        else if let v = args["goal_value"]?.intValue { params["goal_value"] = Double(v) }
-
-        if let v = args["warmup_minutes"]?.doubleValue { params["warmup_minutes"] = v }
-        else if let v = args["warmup_minutes"]?.intValue { params["warmup_minutes"] = Double(v) }
-
-        if let v = args["tempo_distance_km"]?.doubleValue { params["tempo_distance_km"] = v }
-        else if let v = args["tempo_distance_km"]?.intValue { params["tempo_distance_km"] = Double(v) }
-
-        if let v = args["target_pace_seconds_per_km"]?.doubleValue { params["target_pace_seconds_per_km"] = v }
-        else if let v = args["target_pace_seconds_per_km"]?.intValue { params["target_pace_seconds_per_km"] = Double(v) }
-
-        if let v = args["cooldown_minutes"]?.doubleValue { params["cooldown_minutes"] = v }
-        else if let v = args["cooldown_minutes"]?.intValue { params["cooldown_minutes"] = Double(v) }
-
-        if let v = args["repeat_count"]?.intValue { params["repeat_count"] = v }
-        else if let v = args["repeat_count"]?.doubleValue { params["repeat_count"] = Int(v) }
-
-        if let v = args["work_distance_meters"]?.doubleValue { params["work_distance_meters"] = v }
-        else if let v = args["work_distance_meters"]?.intValue { params["work_distance_meters"] = Double(v) }
-
-        if let v = args["rest_distance_meters"]?.doubleValue { params["rest_distance_meters"] = v }
-        else if let v = args["rest_distance_meters"]?.intValue { params["rest_distance_meters"] = Double(v) }
 
         let manager = WorkoutKitManager()
-        let (workout, description) = try await manager.buildAndDescribe(
-            type: workoutType,
+        let (workout, description) = try await manager.buildCustom(
             title: title,
-            params: params
+            warmup: warmup,
+            blocks: blocks,
+            cooldown: cooldown
         )
 
         if dryRun {
-            return try encodeToJSON(DryRunResult(
-                scheduled: false,
-                valid: true,
-                workout_description: description
-            ))
+            return try encodeToJSON(DryRunResult(scheduled: false, valid: true, workout_description: description))
         }
 
         try await manager.schedule(workout)
-        return try encodeToJSON(ScheduleResult(
-            scheduled: true,
-            title: title,
-            type: workoutType
-        ))
+        return try encodeToJSON(ScheduleResult(scheduled: true, title: title))
+    }
+
+    private static func parseStepSpec(from value: Value?) -> StepSpec? {
+        guard let value, case .object(let obj) = value else { return nil }
+        let goalType = obj["goal_type"]?.stringValue ?? "time"
+        let goalValue = obj["goal_value"].flatMap { Double($0) } ?? 0
+        let pace = obj["target_pace_seconds_per_km"].flatMap { Double($0) }
+        let hr = obj["target_heart_rate_bpm"].flatMap { Double($0) }
+        return StepSpec(goalType: goalType, goalValue: goalValue, targetPaceSecPerKm: pace, targetHeartRateBpm: hr)
+    }
+
+    private static func parseBlockSpec(from value: Value) -> BlockSpec? {
+        guard case .object(let obj) = value else { return nil }
+        let repeatCount: Int
+        if let v = obj["repeat_count"]?.intValue {
+            repeatCount = v
+        } else if let v = obj["repeat_count"]?.doubleValue {
+            repeatCount = Int(v)
+        } else {
+            repeatCount = 1
+        }
+        guard let work = parseStepSpec(from: obj["work"]) else { return nil }
+        let rest = parseStepSpec(from: obj["rest"])
+        return BlockSpec(repeatCount: repeatCount, work: work, rest: rest)
     }
 }
 
@@ -82,5 +74,4 @@ private struct DryRunResult: Encodable {
 private struct ScheduleResult: Encodable {
     let scheduled: Bool
     let title: String
-    let type: String
 }
