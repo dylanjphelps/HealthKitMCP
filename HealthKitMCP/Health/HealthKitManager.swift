@@ -32,20 +32,20 @@ actor HealthKitManager {
         return status == .unnecessary
     }
 
-    private func guardAvailableAndAuthorized() async throws -> String? {
+    private func guardAvailableAndAuthorized() async throws -> HKMCPError? {
         guard Self.isAvailable else {
-            return "HealthKit is not available on this device"
+            return HKMCPError(message: "HealthKit is not available on this device")
         }
         let status = try await store.statusForAuthorizationRequest(toShare: [], read: readTypes)
         if status == .shouldRequest {
-            return "HealthKit authorization not granted — open HealthKitMCP.app to authorize"
+            return HKMCPError(message: "HealthKit authorization not granted — open HealthKitMCP.app to authorize")
         }
         return nil
     }
 
     // MARK: - Workout Query
 
-    func queryWorkouts(from startDate: Date, to endDate: Date) async throws -> Result<[WorkoutRecord], String> {
+    func queryWorkouts(from startDate: Date, to endDate: Date) async throws -> Result<[WorkoutRecord], HKMCPError> {
         if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
         let datePredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
@@ -69,7 +69,7 @@ actor HealthKitManager {
         let records = (samples as? [HKWorkout] ?? []).map { self.toWorkoutRecord($0) }
 
         if records.isEmpty {
-            return .failure("No data found for the requested date range")
+            return .failure(HKMCPError(message: "No data found for the requested date range"))
         }
         return .success(records)
     }
@@ -101,7 +101,7 @@ actor HealthKitManager {
 
     // MARK: - Activity Summary
 
-    func queryActivitySummary(from startDate: Date, to endDate: Date) async throws -> Result<[ActivitySummaryRecord], String> {
+    func queryActivitySummary(from startDate: Date, to endDate: Date) async throws -> Result<[ActivitySummaryRecord], HKMCPError> {
         if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
         var intervalComponents = DateComponents()
@@ -168,7 +168,7 @@ actor HealthKitManager {
 
     // MARK: - Heart Rate
 
-    func queryRestingHeartRate(from startDate: Date, to endDate: Date) async throws -> Result<[HeartRateRecord], String> {
+    func queryRestingHeartRate(from startDate: Date, to endDate: Date) async throws -> Result<[HeartRateRecord], HKMCPError> {
         if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
         var intervalComponents = DateComponents()
@@ -218,14 +218,14 @@ actor HealthKitManager {
         }
 
         if records.isEmpty {
-            return .failure("No data found for the requested date range")
+            return .failure(HKMCPError(message: "No data found for the requested date range"))
         }
         return .success(records)
     }
 
     // MARK: - VO2 Max
 
-    func queryVO2Max() async throws -> Result<VO2MaxRecord, String> {
+    func queryVO2Max() async throws -> Result<VO2MaxRecord, HKMCPError> {
         if let error = try await guardAvailableAndAuthorized() { return .failure(error) }
 
         let vo2Type = HKQuantityType(.vo2Max)
@@ -245,7 +245,7 @@ actor HealthKitManager {
         }
 
         guard let sample = samples.first as? HKQuantitySample else {
-            return .failure("No VO2 max data available — this value is recorded by Apple Watch during outdoor runs.")
+            return .failure(HKMCPError(message: "No VO2 max data available — this value is recorded by Apple Watch during outdoor runs."))
         }
 
         let unit = HKUnit.literUnit(with: .milli)

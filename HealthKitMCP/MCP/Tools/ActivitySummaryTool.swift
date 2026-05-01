@@ -12,8 +12,8 @@ enum ActivitySummaryTool {
         switch result {
         case .success(let records):
             return try encodeToJSON(records)
-        case .failure(let message):
-            return message
+        case .failure(let e):
+            return e.message
         }
     }
 }

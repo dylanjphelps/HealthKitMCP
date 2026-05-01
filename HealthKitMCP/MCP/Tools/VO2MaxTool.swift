@@ -8,8 +8,8 @@ enum VO2MaxTool {
         switch result {
         case .success(let record):
             return try encodeToJSON(record)
-        case .failure(let message):
-            return message
+        case .failure(let e):
+            return e.message
         }
     }
 }
