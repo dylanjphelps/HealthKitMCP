@@ -48,7 +48,7 @@ enum ScheduleWorkoutTool {
         else if let v = args["rest_distance_meters"]?.intValue { params["rest_distance_meters"] = Double(v) }
 
         let manager = WorkoutKitManager()
-        let (workout, description) = try manager.buildAndDescribe(
+        let (workout, description) = try await manager.buildAndDescribe(
             type: workoutType,
             title: title,
             params: params

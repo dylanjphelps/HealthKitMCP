@@ -35,9 +35,12 @@ actor WorkoutKitManager {
         let goalType = params["goal_type"] as? String ?? "time"
         let goalValue = params["goal_value"] as? Double ?? 30
 
-        let goal: WorkoutGoal = goalType == "distance"
-            ? .distance(goalValue * 1000, .meters)
-            : .time(goalValue * 60, .seconds)
+        let goal: WorkoutGoal
+        switch goalType {
+        case "distance": goal = .distance(goalValue * 1000, .meters)
+        case "open": goal = .open
+        default: goal = .time(goalValue * 60, .seconds)
+        }
 
         // IntervalStep uses a positional first argument for purpose (no label)
         let step = IntervalStep(.work, goal: goal, alert: nil)
@@ -50,9 +53,12 @@ actor WorkoutKitManager {
             cooldown: nil
         )
 
-        let description = goalType == "distance"
-            ? "Easy run: \(goalValue) km"
-            : "Easy run: \(Int(goalValue)) minutes"
+        let description: String
+        switch goalType {
+        case "distance": description = "Easy run: \(goalValue) km"
+        case "open": description = "Easy run: open goal"
+        default: description = "Easy run: \(Int(goalValue)) minutes"
+        }
 
         return (workout, description)
     }
@@ -128,9 +134,11 @@ actor WorkoutKitManager {
     /// Converts a target pace (seconds/km) ± tolerance into a SpeedRangeAlert (m/s).
     /// WorkoutKit does not expose a pace alert; speed = 1000 / paceSecPerKm.
     private func paceAlert(paceSecPerKm: Double, toleranceSec: Double) -> SpeedRangeAlert {
-        // Faster pace (fewer seconds) → higher speed; add tolerance to pace → lower speed
-        let slowSpeedMps = 1000.0 / (paceSecPerKm + toleranceSec)
-        let fastSpeedMps = 1000.0 / (paceSecPerKm - toleranceSec)
+        // Faster pace (fewer seconds) → higher speed; clamp to avoid div/0
+        let slowPace = paceSecPerKm + toleranceSec
+        let fastPace = max(paceSecPerKm - toleranceSec, 1.0)
+        let slowSpeedMps = 1000.0 / slowPace
+        let fastSpeedMps = 1000.0 / fastPace
         return SpeedRangeAlert(
             target: Measurement(value: slowSpeedMps, unit: .metersPerSecond)
                 ... Measurement(value: fastSpeedMps, unit: .metersPerSecond),

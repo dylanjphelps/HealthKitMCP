@@ -140,7 +140,7 @@ actor HealthKitMCPServer {
             ),
             Tool(
                 name: "schedule_workout",
-                description: "Schedule a running workout using WorkoutKit. Supports easy, tempo, and interval workouts. Use dry_run=true to validate without scheduling.",
+                description: "Schedule a running workout for today using WorkoutKit. Supports easy, tempo, and interval workouts. Use dry_run=true to validate without scheduling.",
                 inputSchema: .object([
                     "type": .string("object"),
                     "properties": .object([
