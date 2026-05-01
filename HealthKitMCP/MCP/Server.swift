@@ -39,6 +39,8 @@ actor HealthKitMCPServer {
             switch params.name {
             case "schedule_workout":
                 text = try await ScheduleWorkoutTool.handle(args: args)
+            case "list_scheduled_workouts":
+                text = try await ListScheduledWorkoutsTool.handle()
             default:
                 return CallTool.Result(
                     content: [.text(text: "Unknown tool: \(params.name)", annotations: nil, _meta: nil)],
@@ -128,6 +130,16 @@ actor HealthKitMCPServer {
                         ])
                     ]),
                     "required": .array([.string("title"), .string("blocks")])
+                ])
+            )
+            ,
+            Tool(
+                name: "list_scheduled_workouts",
+                description: "List all workouts currently scheduled via WorkoutKit, and show the authorization state. Use this to verify that schedule_workout succeeded.",
+                inputSchema: .object([
+                    "type": .string("object"),
+                    "properties": .object([:]),
+                    "required": .array([])
                 ])
             )
         ]

@@ -35,7 +35,7 @@ enum ScheduleWorkoutTool {
             return try encodeToJSON(DryRunResult(scheduled: false, valid: true, workout_description: description))
         }
 
-        await manager.schedule(workout, on: scheduledDate)
+        try await manager.schedule(workout, on: scheduledDate)
         return try encodeToJSON(ScheduleResult(scheduled: true, title: title, date: scheduledDate ?? "today"))
     }
 
