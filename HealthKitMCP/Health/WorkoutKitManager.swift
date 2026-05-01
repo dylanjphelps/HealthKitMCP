@@ -66,9 +66,26 @@ actor WorkoutKitManager {
         return (workout, description)
     }
 
+    /// Returns the current WorkoutScheduler authorization state as a readable string.
+    func authorizationState() async -> String {
+        switch await WorkoutScheduler.shared.authorizationState {
+        case .notDetermined: return "notDetermined"
+        case .authorized:    return "authorized"
+        case .denied:        return "denied"
+        @unknown default:    return "unknown"
+        }
+    }
+
     /// Wraps the CustomWorkout in a WorkoutPlan and schedules it via WorkoutScheduler.
-    /// scheduledDate: ISO 8601 date string (YYYY-MM-DD). Defaults to today if nil or unparseable.
-    func schedule(_ workout: CustomWorkout, on scheduledDate: String? = nil) async {
+    /// Throws if the scheduler is not authorized. scheduledDate: YYYY-MM-DD, defaults to today.
+    func schedule(_ workout: CustomWorkout, on scheduledDate: String? = nil) async throws {
+        let state = await WorkoutScheduler.shared.authorizationState
+        guard state == .authorized else {
+            throw WorkoutError.invalidType(
+                "WorkoutScheduler is not authorized (state: \(state)). " +
+                "Open System Settings → Privacy & Security → Fitness and allow access for HealthKitMCP."
+            )
+        }
         let plan = WorkoutPlan(.custom(workout))
         let resolved: Date
         if let s = scheduledDate, let parsed = Self.isoDay.date(from: s) {
@@ -78,6 +95,11 @@ actor WorkoutKitManager {
         }
         let components = Calendar.current.dateComponents([.year, .month, .day], from: resolved)
         await WorkoutScheduler.shared.schedule(plan, at: components)
+    }
+
+    /// Returns all currently scheduled workout plans.
+    func listScheduled() async -> [ScheduledWorkoutPlan] {
+        await WorkoutScheduler.shared.workoutPlans
     }
 
     private static let isoDay: ISO8601DateFormatter = {
