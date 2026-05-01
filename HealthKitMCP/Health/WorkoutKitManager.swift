@@ -156,11 +156,7 @@ actor WorkoutKitManager {
             : "\(step.goalValue)min"
     }
 
-    private func formatPace(_ secondsPerKm: Double) -> String {
-        let min = Int(secondsPerKm) / 60
-        let sec = Int(secondsPerKm) % 60
-        return "\(min):\(String(format: "%02d", sec))"
-    }
+
 }
 
 enum WorkoutError: Error, LocalizedError {
@@ -168,8 +164,8 @@ enum WorkoutError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidType(let t):
-            return "Unknown workout type: \(t)"
+        case .invalidType(let message):
+            return message
         }
     }
 }
