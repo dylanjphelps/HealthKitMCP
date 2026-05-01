@@ -10,6 +10,13 @@
 		54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE4495175C870FC90B419F /* Models.swift */; };
 		6000C221EB63A175CEC457A7 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */; };
 		736618DA71A1243517A3AAA6 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 63267DFA5C0706B1A6CB09B0 /* MCP */; };
+		A1B2C3D4E5F6A1B2 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601B2 /* Server.swift */; };
+		A1B2C3D4E5F6A1B3 /* ToolHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601B3 /* ToolHelpers.swift */; };
+		A1B2C3D4E5F6A1B4 /* WorkoutQueryTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601B4 /* WorkoutQueryTool.swift */; };
+		A1B2C3D4E5F6A1B5 /* ActivitySummaryTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601B5 /* ActivitySummaryTool.swift */; };
+		A1B2C3D4E5F6A1B6 /* HeartRateTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601B6 /* HeartRateTool.swift */; };
+		A1B2C3D4E5F6A1B7 /* VO2MaxTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601B7 /* VO2MaxTool.swift */; };
+		A1B2C3D4E5F6A1B8 /* ScheduleWorkoutTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601B8 /* ScheduleWorkoutTool.swift */; };
 		BA380EFB8C47CC8B59DF7E5F /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7064B4297B3A50657303AD1A /* Info.plist */; };
 		C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */; };
 /* End PBXBuildFile section */
@@ -20,6 +27,13 @@
 		6FDE4495175C870FC90B419F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7064B4297B3A50657303AD1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A1B2C3D4E5F601B2 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601B3 /* ToolHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolHelpers.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601B4 /* WorkoutQueryTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutQueryTool.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601B5 /* ActivitySummaryTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySummaryTool.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601B6 /* HeartRateTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateTool.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601B7 /* VO2MaxTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VO2MaxTool.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601B8 /* ScheduleWorkoutTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleWorkoutTool.swift; sourceTree = "<group>"; };
 		FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -38,8 +52,23 @@
 		4450FC408BF4E023D260EA34 /* MCP */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F601B2 /* Server.swift */,
+				A1B2C3D4E5F601B3 /* ToolHelpers.swift */,
+				A1B2C3D4E5F6FF01 /* Tools */,
 			);
 			path = MCP;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F6FF01 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F601B4 /* WorkoutQueryTool.swift */,
+				A1B2C3D4E5F601B5 /* ActivitySummaryTool.swift */,
+				A1B2C3D4E5F601B6 /* HeartRateTool.swift */,
+				A1B2C3D4E5F601B7 /* VO2MaxTool.swift */,
+				A1B2C3D4E5F601B8 /* ScheduleWorkoutTool.swift */,
+			);
+			path = Tools;
 			sourceTree = "<group>";
 		};
 		CE00981B5432127B66A709D8 = {
@@ -157,6 +186,13 @@
 				6000C221EB63A175CEC457A7 /* HealthKitManager.swift in Sources */,
 				54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */,
 				C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */,
+				A1B2C3D4E5F6A1B2 /* Server.swift in Sources */,
+				A1B2C3D4E5F6A1B3 /* ToolHelpers.swift in Sources */,
+				A1B2C3D4E5F6A1B4 /* WorkoutQueryTool.swift in Sources */,
+				A1B2C3D4E5F6A1B5 /* ActivitySummaryTool.swift in Sources */,
+				A1B2C3D4E5F6A1B6 /* HeartRateTool.swift in Sources */,
+				A1B2C3D4E5F6A1B7 /* VO2MaxTool.swift in Sources */,
+				A1B2C3D4E5F6A1B8 /* ScheduleWorkoutTool.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
