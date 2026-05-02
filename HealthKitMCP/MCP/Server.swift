@@ -101,7 +101,7 @@ actor HealthKitMCPServer {
     private static var scheduleWorkoutToolDefinition: Tool {
         Tool(
             name: "schedule_workout",
-            description: "Schedules a structured running workout directly to Apple Watch via WorkoutKit. Supports warmup, a sequence of segments, and cooldown. Each segment in 'blocks' is either a standalone step (omit 'work' key — just provide goal_type/goal_value/targets directly) or an interval block (include a 'work' key with repeat_count and optional rest/rest_after). Use standalone steps for continuous efforts; use interval blocks for repeated work/rest cycles.",
+            description: "Schedules a structured running workout directly to Apple Watch via WorkoutKit. Supports warmup, a sequence of segments, and cooldown. Each segment in 'blocks' is either a standalone step (omit 'steps' key — provide goal_type/goal_value/targets directly, with optional purpose defaulting to 'work') or an interval block (include a 'steps' key with repeat_count and an ordered array of steps, each with purpose/goal/targets). Use standalone steps for continuous efforts; use interval blocks for repeated step cycles.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([
@@ -117,43 +117,30 @@ actor HealthKitMCPServer {
                     ]),
                     "blocks": .object([
                         "type": .string("array"),
-                        "description": .string("Sequence of segments between warmup and cooldown. Each item is either a standalone step (goal_type/goal_value/targets, no 'work' key) or an interval block ('work' key required, with repeat_count and optional rest/rest_after)."),
+                        "description": .string("Sequence of segments between warmup and cooldown. Each item is either a standalone step (goal_type/goal_value/targets, no 'steps' key) or an interval block ('steps' key required, with repeat_count and a steps array)."),
                         "items": .object([
                             "type": .string("object"),
                             "properties": .object([
                                 "repeat_count": .object(["type": .string("number"), "description": .string("Interval blocks only. Repetitions (default 1).")]),
-                                "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app. Standalone steps only (omit 'work' key).")]),
+                                "purpose": .object(["type": .string("string"), "enum": .array([.string("work"), .string("recovery")]), "description": .string("Standalone steps only. Defaults to work.")]),
+                                "display_name": .object(["type": .string("string"), "description": .string("Standalone steps only. Custom name shown for this step in the Fitness app.")]),
                                 "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")]), "description": .string("Standalone steps only.")]),
                                 "goal_value": .object(["type": .string("number"), "description": .string("Standalone steps only. Minutes if time, miles if distance.")]),
                                 "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Standalone steps only.")]),
                                 "target_pace_seconds_per_mile": .object(["type": .string("number"), "description": .string("Standalone steps only.")]),
-                                "work": .object([
-                                    "type": .string("object"),
-                                    "properties": .object([
-                                        "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
-                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
-                                        "goal_value": .object(["type": .string("number")]),
-                                        "target_heart_rate_bpm": .object(["type": .string("number")]),
-                                        "target_pace_seconds_per_mile": .object(["type": .string("number")])
-                                    ])
-                                ]),
-                                "rest": .object([
-                                    "type": .string("object"),
-                                    "properties": .object([
-                                        "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
-                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
-                                        "goal_value": .object(["type": .string("number"), "description": .string("Omit when goal_type is open.")]),
-                                        "target_heart_rate_bpm": .object(["type": .string("number")])
-                                    ])
-                                ]),
-                                "rest_after": .object([
-                                    "type": .string("object"),
-                                    "description": .string("A single recovery block inserted after all iterations of this block complete. Use for inter-set rest (e.g. 3 min between sets)."),
-                                    "properties": .object([
-                                        "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
-                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
-                                        "goal_value": .object(["type": .string("number"), "description": .string("Omit when goal_type is open.")]),
-                                        "target_heart_rate_bpm": .object(["type": .string("number")])
+                                "steps": .object([
+                                    "type": .string("array"),
+                                    "description": .string("Interval blocks only. Ordered list of steps per repetition."),
+                                    "items": .object([
+                                        "type": .string("object"),
+                                        "properties": .object([
+                                            "purpose": .object(["type": .string("string"), "enum": .array([.string("work"), .string("recovery")])]),
+                                            "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
+                                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance. Omit for open.")]),
+                                            "target_heart_rate_bpm": .object(["type": .string("number")]),
+                                            "target_pace_seconds_per_mile": .object(["type": .string("number")])
+                                        ])
                                     ])
                                 ])
                             ])
