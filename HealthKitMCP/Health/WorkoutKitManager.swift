@@ -128,7 +128,7 @@ actor WorkoutKitManager {
     func schedule(_ workout: CustomWorkout, for date: Date) async throws {
         let scheduler = WorkoutScheduler.shared
         if await scheduler.authorizationState == .notDetermined {
-            await scheduler.requestAuthorization()
+            _ = await scheduler.requestAuthorization()
         }
         var components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         components.calendar = Calendar.current
