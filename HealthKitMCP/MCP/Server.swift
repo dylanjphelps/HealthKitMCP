@@ -101,7 +101,7 @@ actor HealthKitMCPServer {
     private static var scheduleWorkoutToolDefinition: Tool {
         Tool(
             name: "schedule_workout",
-            description: "Schedules a structured running workout directly to Apple Watch via WorkoutKit. Supports warmup, a sequence of segments, and cooldown. Each segment in 'blocks' is either a standalone step (omit 'steps' key — provide goal_type/goal_value/targets directly, with optional purpose defaulting to 'work') or an interval block (include a 'steps' key with repeat_count and an ordered array of steps, each with purpose/goal/targets). Use standalone steps for continuous efforts; use interval blocks for repeated step cycles.",
+            description: "Schedules a structured running workout directly to Apple Watch via WorkoutKit. Supports warmup, a sequence of segments, and cooldown. Each segment in 'blocks' is either a standalone step (omit 'steps' key — provide goal_type/goal_value/targets directly, with optional purpose defaulting to 'work') or an interval block (include a 'steps' key with repeat_count and an ordered array of steps, each with purpose/goal/targets). Use standalone steps for continuous efforts; use interval blocks for repeated step cycles. For post-set rest between interval groups (rest that does not repeat with each rep), add a standalone recovery block after the interval block.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([

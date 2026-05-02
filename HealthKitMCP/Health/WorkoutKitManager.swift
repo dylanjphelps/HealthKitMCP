@@ -39,6 +39,9 @@ actor WorkoutKitManager {
         guard !blocks.isEmpty else {
             throw WorkoutError.invalidType("blocks array must not be empty")
         }
+        guard blocks.allSatisfy({ !$0.steps.isEmpty }) else {
+            throw WorkoutError.invalidType("each block must contain at least one step")
+        }
 
         let warmupStep = warmup.map { makeStep($0) }
         let cooldownStep = cooldown.map { makeStep($0) }
