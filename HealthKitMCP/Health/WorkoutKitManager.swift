@@ -176,10 +176,12 @@ actor WorkoutKitManager {
     }
 
     private func workoutInfo(from plan: WorkoutPlan) -> (title: String, type: String) {
-        if let custom = plan.workout as? CustomWorkout {
+        switch plan.workout {
+        case .custom(let custom):
             return (custom.displayName ?? "(unnamed)", "custom")
+        default:
+            return ("(unnamed)", "unknown")
         }
-        return ("(unnamed)", "unknown")
     }
 
     private func dateString(from components: DateComponents) -> String {
