@@ -4,20 +4,20 @@ import MCP
 
 actor HealthKitMCPServer {
     private let server: Server
-    let transport: StatefulHTTPServerTransport   // non-private for HTTPServer
+    let transport: StatelessHTTPServerTransport   // non-private for HTTPServer
     private let healthKit: HealthKitManager
 
     init() {
         // Disable origin validation: requests come from a Mac on the local network,
         // not localhost, so the default localhost-only check would reject them.
+        // Use stateless transport: no session management, so reconnections always work.
         let pipeline = StandardValidationPipeline(validators: [
             OriginValidator.disabled,
-            AcceptHeaderValidator(mode: .sseRequired),
+            AcceptHeaderValidator(mode: .jsonOnly),
             ContentTypeValidator(),
             ProtocolVersionValidator(),
-            SessionValidator(),
         ])
-        self.transport = StatefulHTTPServerTransport(validationPipeline: pipeline)
+        self.transport = StatelessHTTPServerTransport(validationPipeline: pipeline)
         self.healthKit = HealthKitManager()
         self.server = Server(
             name: "HealthKitMCP",
@@ -102,7 +102,7 @@ actor HealthKitMCPServer {
                         "type": .string("object"),
                         "properties": .object([
                             "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
-                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
+                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance.")]),
                             "target_heart_rate_bpm": .object(["type": .string("number")])
                         ])
                     ]),
@@ -118,7 +118,7 @@ actor HealthKitMCPServer {
                                         "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
                                         "goal_value": .object(["type": .string("number")]),
                                         "target_heart_rate_bpm": .object(["type": .string("number")]),
-                                        "target_pace_seconds_per_km": .object(["type": .string("number")])
+                                        "target_pace_seconds_per_mile": .object(["type": .string("number")])
                                     ])
                                 ]),
                                 "rest": .object([

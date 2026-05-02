@@ -5,11 +5,20 @@ import MCP
 actor HTTPServer {
     static let port: UInt16 = 8080
 
-    private let transport: StatefulHTTPServerTransport
+    private var transport: StatelessHTTPServerTransport
     private var listener: NWListener?
+    private var serverResetter: (@Sendable () async -> Void)?
 
-    init(transport: StatefulHTTPServerTransport) {
+    init(transport: StatelessHTTPServerTransport) {
         self.transport = transport
+    }
+
+    func updateTransport(_ newTransport: StatelessHTTPServerTransport) {
+        transport = newTransport
+    }
+
+    func setServerResetter(_ resetter: @escaping @Sendable () async -> Void) {
+        serverResetter = resetter
     }
 
     // MARK: - Lifecycle
@@ -44,8 +53,32 @@ actor HTTPServer {
             return
         }
 
-        let response = await transport.handleRequest(request)
+        var response = await transport.handleRequest(request)
+
+        // mcp-remote sends its own initialize before proxying the client's initialize.
+        // When the second initialize arrives the MCP Server actor rejects it. Detect that,
+        // spin up a fresh server+transport, and retry so the client's initialize succeeds.
+        if Self.isInitializeRequest(request), Self.isAlreadyInitializedError(response) {
+            await serverResetter?()
+            response = await transport.handleRequest(request)
+        }
+
         await writeResponse(response, to: connection)
+    }
+
+    private static func isInitializeRequest(_ request: HTTPRequest) -> Bool {
+        guard let body = request.body,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let method = json["method"] as? String else { return false }
+        return method == "initialize"
+    }
+
+    private static func isAlreadyInitializedError(_ response: HTTPResponse) -> Bool {
+        guard let data = response.bodyData,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let error = json["error"] as? [String: Any],
+              let message = error["message"] as? String else { return false }
+        return message.contains("already initialized")
     }
 
     // MARK: - Reading

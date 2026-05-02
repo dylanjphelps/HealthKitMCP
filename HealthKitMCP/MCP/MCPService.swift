@@ -14,17 +14,34 @@ final class MCPService: ObservableObject {
     func start() {
         guard !isRunning else { return }
 
-        let server = HealthKitMCPServer()
-        let http = HTTPServer(transport: server.transport)
-        mcpServer = server
-        httpServer = http
-
         serverTask = Task {
+            var currentServer = HealthKitMCPServer()
+            let http = HTTPServer(transport: currentServer.transport)
+            mcpServer = currentServer
+            httpServer = http
+
             do {
                 try await http.start()
                 serverAddress = "http://\(localIPAddress() ?? "?"):8080/mcp"
                 isRunning = true
-                try await server.run()
+
+                // Provide a resetter so HTTPServer can spin up a fresh MCP server
+                // when a reconnecting client's initialize is rejected as "already initialized".
+                await http.setServerResetter { [weak http] in
+                    let next = HealthKitMCPServer()
+                    guard let http else { return }
+                    await http.updateTransport(next.transport)
+                    Task { try? await next.run() }
+                }
+
+                while !Task.isCancelled {
+                    do { try await currentServer.run() } catch {}
+                    guard !Task.isCancelled else { break }
+                    let next = HealthKitMCPServer()
+                    await http.updateTransport(next.transport)
+                    currentServer = next
+                    mcpServer = next
+                }
             } catch {
                 isRunning = false
             }
@@ -64,7 +81,7 @@ final class MCPService: ObservableObject {
                 var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                 if getnameinfo(addr, socklen_t(addr.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
                     let ip = String(cString: host)
-                    if ip.hasPrefix("192.") || ip.hasPrefix("10.") || ip.hasPrefix("172.") {
+                    if ip.hasPrefix("192.168.") || ip.hasPrefix("10.") || ip.hasPrefix("172.") {
                         address = ip
                     }
                 }
