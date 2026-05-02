@@ -8,7 +8,7 @@ An iOS app that gives Claude Desktop access to your HealthKit fitness data and l
 - Mac with Claude Desktop
 - Xcode (any recent version) + a free Apple ID
 - Both devices on the same Wi-Fi network
-- Apple Watch paired to your iPhone (for `schedule_workout`)
+- Apple Watch paired to your iPhone (for workout scheduling)
 
 ## Setup
 
@@ -54,6 +54,8 @@ Keep the app open on your iPhone while using Claude Desktop. Claude will connect
 | `query_resting_heart_rate` | Daily resting HR (avg, min, max) |
 | `query_vo2max` | Most recent VO2 max estimate |
 | `schedule_workout` | Push a structured run directly to Apple Watch |
+| `query_scheduled_workouts` | List upcoming workouts scheduled to Apple Watch |
+| `delete_scheduled_workout` | Remove a scheduled workout by index |
 
 ## Re-signing
 
