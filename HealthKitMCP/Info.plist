@@ -20,5 +20,11 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>HealthKit MCP reads your fitness data to answer questions from Claude.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>HealthKit MCP schedules running workouts to your Apple Watch via Claude.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>HealthKit MCP serves a local network API so Claude Desktop on your Mac can connect.</string>
 </dict>
 </plist>

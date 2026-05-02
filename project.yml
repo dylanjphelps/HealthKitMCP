@@ -48,6 +48,9 @@ targets:
       path: HealthKitMCP/Info.plist
       properties:
         CFBundleDisplayName: HealthKitMCP
+        NSHealthShareUsageDescription: "HealthKit MCP reads your fitness data to answer questions from Claude."
+        NSHealthUpdateUsageDescription: "HealthKit MCP schedules running workouts to your Apple Watch via Claude."
+        NSLocalNetworkUsageDescription: "HealthKit MCP serves a local network API so Claude Desktop on your Mac can connect."
   HealthKitMCPTests:
     type: bundle.unit-test
     platform: iOS
