@@ -33,7 +33,8 @@ final class MCPService: ObservableObject {
 
     func stop() {
         serverTask?.cancel()
-        Task { await httpServer?.stop() }
+        let http = httpServer
+        Task { await http?.stop() }
         mcpServer = nil
         httpServer = nil
         isRunning = false
