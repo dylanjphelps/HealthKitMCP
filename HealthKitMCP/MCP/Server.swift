@@ -60,6 +60,10 @@ actor HealthKitMCPServer {
                 text = try await QueryRestingHeartRateTool.handle(args: args, manager: healthKit)
             case QueryVO2MaxTool.toolName:
                 text = try await QueryVO2MaxTool.handle(args: args, manager: healthKit)
+            case QueryScheduledWorkoutsTool.toolName:
+                text = try await QueryScheduledWorkoutsTool.handle(manager: WorkoutKitManager())
+            case DeleteScheduledWorkoutTool.toolName:
+                text = try await DeleteScheduledWorkoutTool.handle(args: args, manager: WorkoutKitManager())
             default:
                 return CallTool.Result(
                     content: [.text(text: "Unknown tool: \(params.name)", annotations: nil, _meta: nil)],
@@ -87,6 +91,8 @@ actor HealthKitMCPServer {
             QueryActivitySummaryTool.definition,
             QueryRestingHeartRateTool.definition,
             QueryVO2MaxTool.definition,
+            QueryScheduledWorkoutsTool.definition,
+            DeleteScheduledWorkoutTool.definition,
         ]
     }
 
