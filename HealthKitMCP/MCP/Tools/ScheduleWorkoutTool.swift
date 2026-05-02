@@ -1,6 +1,7 @@
 // HealthKitMCP/MCP/Tools/ScheduleWorkoutTool.swift
 import Foundation
 import MCP
+import WorkoutKit
 
 enum ScheduleWorkoutTool {
     static func handle(args: [String: Value]) async throws -> String {
@@ -64,14 +65,18 @@ enum ScheduleWorkoutTool {
         // No "work" key → standalone step, modeled as a single-iteration block
         if obj["work"] == nil {
             guard let step = parseStepSpec(from: value) else { return nil }
-            return BlockSpec(repeatCount: 1, work: step, rest: nil, restAfter: nil)
+            return BlockSpec(repeatCount: 1, steps: [(.work, step)])
         }
         let repeatCount: Int
         if let v = obj["repeat_count"]?.intValue { repeatCount = v }
         else if let v = obj["repeat_count"]?.doubleValue { repeatCount = Int(v) }
         else { repeatCount = 1 }
         guard let work = parseStepSpec(from: obj["work"]) else { return nil }
-        return BlockSpec(repeatCount: repeatCount, work: work, rest: parseStepSpec(from: obj["rest"]), restAfter: parseStepSpec(from: obj["rest_after"]))
+        var steps: [(purpose: IntervalStep.Purpose, spec: StepSpec)] = [(.work, work)]
+        if let rest = parseStepSpec(from: obj["rest"]) {
+            steps.append((.recovery, rest))
+        }
+        return BlockSpec(repeatCount: repeatCount, steps: steps)
     }
 
     private static func isoToday() -> String {

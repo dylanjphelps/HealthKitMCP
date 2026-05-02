@@ -22,9 +22,7 @@ struct StepSpec {
 
 struct BlockSpec {
     let repeatCount: Int
-    let work: StepSpec
-    let rest: StepSpec?
-    let restAfter: StepSpec?  // single recovery block emitted after all iterations
+    let steps: [(purpose: IntervalStep.Purpose, spec: StepSpec)]
 }
 
 // MARK: - Manager
@@ -45,19 +43,9 @@ actor WorkoutKitManager {
         let warmupStep = warmup.map { makeStep($0) }
         let cooldownStep = cooldown.map { makeStep($0) }
 
-        let intervalBlocks: [IntervalBlock] = blocks.flatMap { block -> [IntervalBlock] in
-            let workStep = IntervalStep(.work, step: makeStep(block.work))
-            var steps: [IntervalStep] = [workStep]
-            if let rest = block.rest {
-                steps.append(IntervalStep(.recovery, step: makeStep(rest)))
-            }
-            let mainBlock = IntervalBlock(steps: steps, iterations: block.repeatCount)
-            guard let restAfter = block.restAfter else { return [mainBlock] }
-            let restBlock = IntervalBlock(
-                steps: [IntervalStep(.recovery, step: makeStep(restAfter))],
-                iterations: 1
-            )
-            return [mainBlock, restBlock]
+        let intervalBlocks: [IntervalBlock] = blocks.map { block in
+            let intervalSteps = block.steps.map { IntervalStep($0.purpose, step: makeStep($0.spec)) }
+            return IntervalBlock(steps: intervalSteps, iterations: block.repeatCount)
         }
 
         let workout = CustomWorkout(
@@ -117,17 +105,12 @@ actor WorkoutKitManager {
         if let w = warmup { parts.append(stepLabel(w) + " warmup") }
 
         for block in blocks {
-            let workDesc = stepLabel(block.work)
-            if let rest = block.rest {
-                let restDesc = stepLabel(rest)
-                parts.append(block.repeatCount > 1
-                    ? "\(block.repeatCount)×(\(workDesc) + \(restDesc) recovery)"
-                    : "(\(workDesc) + \(restDesc) recovery)")
-            } else {
-                parts.append(block.repeatCount > 1
-                    ? "\(block.repeatCount)×\(workDesc)"
-                    : workDesc)
+            let stepDescs = block.steps.map { (purpose, spec) -> String in
+                purpose == .recovery ? "\(stepLabel(spec)) recovery" : stepLabel(spec)
             }
+            let joined = stepDescs.joined(separator: " + ")
+            let blockDesc = stepDescs.count > 1 ? "(\(joined))" : joined
+            parts.append(block.repeatCount > 1 ? "\(block.repeatCount)×\(blockDesc)" : blockDesc)
         }
 
         if let c = cooldown { parts.append(stepLabel(c) + " cooldown") }

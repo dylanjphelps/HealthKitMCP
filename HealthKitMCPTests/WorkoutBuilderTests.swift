@@ -90,7 +90,7 @@ final class WorkoutBuilderTests: XCTestCase {
     func testSimpleEasyRunDescription() async throws {
         let manager = WorkoutKitManager()
         let work = StepSpec(goalType: "distance", goalValue: 5, targetPaceSecPerMile: nil, targetHeartRateBpm: 140, displayName: nil)
-        let block = BlockSpec(repeatCount: 1, work: work, rest: nil, restAfter: nil)
+        let block = BlockSpec(repeatCount: 1, steps: [(.work, work)])
         let desc = await manager.describeWorkout(title: "Easy 5mi", warmup: nil, blocks: [block], cooldown: nil)
         XCTAssertEqual(desc, "5.0mi")
     }
@@ -99,7 +99,7 @@ final class WorkoutBuilderTests: XCTestCase {
         let manager = WorkoutKitManager()
         let work = StepSpec(goalType: "time", goalValue: 3, targetPaceSecPerMile: 270, targetHeartRateBpm: nil, displayName: nil)
         let rest = StepSpec(goalType: "time", goalValue: 1.5, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil)
-        let block = BlockSpec(repeatCount: 6, work: work, rest: rest, restAfter: nil)
+        let block = BlockSpec(repeatCount: 6, steps: [(.work, work), (.recovery, rest)])
         let desc = await manager.describeWorkout(title: "6x3min", warmup: nil, blocks: [block], cooldown: nil)
         XCTAssertEqual(desc, "6×(3.0min + 1.5min recovery)")
     }
