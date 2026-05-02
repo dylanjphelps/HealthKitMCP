@@ -60,22 +60,25 @@ enum ScheduleWorkoutTool {
         return StepSpec(goalType: goalType, goalValue: goalValue, targetPaceSecPerMile: pace, targetHeartRateBpm: hr, displayName: displayName)
     }
 
-    private static func parseBlockSpec(from value: Value) -> BlockSpec? {
+    static func parseBlockSpec(from value: Value) -> BlockSpec? {
         guard case .object(let obj) = value else { return nil }
-        // No "work" key → standalone step, modeled as a single-iteration block
-        if obj["work"] == nil {
-            guard let step = parseStepSpec(from: value) else { return nil }
-            return BlockSpec(repeatCount: 1, steps: [(.work, step)])
+        if obj["steps"] == nil {
+            guard let spec = parseStepSpec(from: value) else { return nil }
+            let purpose: IntervalStep.Purpose = obj["purpose"]?.stringValue == "recovery" ? .recovery : .work
+            return BlockSpec(repeatCount: 1, steps: [(purpose, spec)])
         }
+        guard case .array(let stepsArray) = obj["steps"] else { return nil }
         let repeatCount: Int
         if let v = obj["repeat_count"]?.intValue { repeatCount = v }
         else if let v = obj["repeat_count"]?.doubleValue { repeatCount = Int(v) }
         else { repeatCount = 1 }
-        guard let work = parseStepSpec(from: obj["work"]) else { return nil }
-        var steps: [(purpose: IntervalStep.Purpose, spec: StepSpec)] = [(.work, work)]
-        if let rest = parseStepSpec(from: obj["rest"]) {
-            steps.append((.recovery, rest))
+        let steps: [(IntervalStep.Purpose, StepSpec)] = stepsArray.compactMap { stepValue in
+            guard case .object(let stepObj) = stepValue,
+                  let spec = parseStepSpec(from: stepValue) else { return nil }
+            let purpose: IntervalStep.Purpose = stepObj["purpose"]?.stringValue == "recovery" ? .recovery : .work
+            return (purpose, spec)
         }
+        guard !steps.isEmpty else { return nil }
         return BlockSpec(repeatCount: repeatCount, steps: steps)
     }
 
