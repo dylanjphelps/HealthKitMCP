@@ -7,7 +7,8 @@ enum ScheduleWorkoutTool {
         let title = args["title"]?.stringValue ?? ""
         guard !title.isEmpty else { return "Missing required parameter: title" }
 
-        guard let blocksValue = args["blocks"], case .array(let blockArray) = blocksValue, !blockArray.isEmpty else {
+        guard let blocksValue = args["blocks"],
+              case .array(let blockArray) = blocksValue, !blockArray.isEmpty else {
             return "Missing required parameter: blocks (must be a non-empty array)"
         }
 
@@ -21,57 +22,29 @@ enum ScheduleWorkoutTool {
         }
 
         let manager = WorkoutKitManager()
-        let (_, description) = try await manager.buildCustom(
+        let (workout, description) = try await manager.buildCustom(
             title: title,
             warmup: warmup,
             blocks: blocks,
             cooldown: cooldown
         )
 
-        let shortcutsURL = buildShortcutsURL(
-            title: title,
-            date: scheduledDate,
-            description: description,
-            args: args
-        )
+        let date = parseDate(from: scheduledDate)
+        try await manager.schedule(workout, for: date)
 
         struct Result: Encodable {
             let title: String
             let date: String
             let description: String
-            let shortcuts_url: String
-            let instructions: String
+            let scheduled: Bool
         }
 
         return try encodeToJSON(Result(
             title: title,
             date: scheduledDate,
             description: description,
-            shortcuts_url: shortcutsURL,
-            instructions: "Open shortcuts_url on your iPhone to schedule this workout. Requires a Shortcut named 'Schedule Workout' — see setup instructions."
+            scheduled: true
         ))
-    }
-
-    // MARK: - Shortcuts URL
-
-    private static func buildShortcutsURL(
-        title: String,
-        date: String,
-        description: String,
-        args: [String: Value]
-    ) -> String {
-        // Encode a JSON payload the Shortcut can read via "Get Dictionary from Input"
-        let payload: [String: Any] = [
-            "title": title,
-            "date": date,
-            "description": description
-        ]
-        guard let data = try? JSONSerialization.data(withJSONObject: payload),
-              let json = String(data: data, encoding: .utf8),
-              let encoded = json.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return "shortcuts://run-shortcut?name=Schedule%20Workout"
-        }
-        return "shortcuts://run-shortcut?name=Schedule%20Workout&input=\(encoded)"
     }
 
     // MARK: - Parsing
@@ -99,5 +72,11 @@ enum ScheduleWorkoutTool {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withFullDate]
         return f.string(from: Date())
+    }
+
+    private static func parseDate(from iso: String) -> Date {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withFullDate]
+        return f.date(from: iso) ?? Date()
     }
 }
