@@ -190,6 +190,26 @@ actor WorkoutKitManager {
         }
         return String(format: "%04d-%02d-%02d", year, month, day)
     }
+
+    func deleteScheduled(at index: Int) async throws -> ScheduledWorkoutResult {
+        let scheduler = WorkoutScheduler.shared
+        let state = await scheduler.authorizationState
+        if state == .notDetermined {
+            let granted = await scheduler.requestAuthorization()
+            guard granted == .authorized else { throw WorkoutError.authorizationDenied }
+        } else if state == .denied {
+            throw WorkoutError.authorizationDenied
+        }
+        let plans = await scheduler.scheduledWorkouts
+        guard index >= 0 && index < plans.count else {
+            throw WorkoutError.invalidIndex("No scheduled workout at index \(index) (found \(plans.count)).")
+        }
+        let target = plans[index]
+        await scheduler.remove(target.plan, at: target.date)
+        let (title, type) = workoutInfo(from: target.plan)
+        let date = dateString(from: target.date)
+        return ScheduledWorkoutResult(index: index, date: date, title: title, type: type)
+    }
 }
 
 enum WorkoutError: Error, LocalizedError {
