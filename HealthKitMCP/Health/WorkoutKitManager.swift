@@ -161,10 +161,12 @@ actor WorkoutKitManager {
 
 enum WorkoutError: Error, LocalizedError {
     case invalidType(String)
+    case invalidIndex(String)
     case authorizationDenied
     var errorDescription: String? {
         switch self {
         case .invalidType(let m): return m
+        case .invalidIndex(let m): return m
         case .authorizationDenied:
             return "WorkoutKit access is denied. Re-enable it in Settings > Privacy & Security > Motion & Fitness, then try again."
         }
