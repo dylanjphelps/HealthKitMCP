@@ -6,6 +6,7 @@ actor HealthKitMCPServer {
     private let server: Server
     let transport: StatelessHTTPServerTransport   // non-private for HTTPServer
     private let healthKit: HealthKitManager
+    private let workoutKit: WorkoutKitManager
 
     init() {
         // Disable origin validation: requests come from a Mac on the local network,
@@ -19,6 +20,7 @@ actor HealthKitMCPServer {
         ])
         self.transport = StatelessHTTPServerTransport(validationPipeline: pipeline)
         self.healthKit = HealthKitManager()
+        self.workoutKit = WorkoutKitManager()
         self.server = Server(
             name: "HealthKitMCP",
             version: "1.0.0",
@@ -61,9 +63,9 @@ actor HealthKitMCPServer {
             case QueryVO2MaxTool.toolName:
                 text = try await QueryVO2MaxTool.handle(args: args, manager: healthKit)
             case QueryScheduledWorkoutsTool.toolName:
-                text = try await QueryScheduledWorkoutsTool.handle(manager: WorkoutKitManager())
+                text = try await QueryScheduledWorkoutsTool.handle(manager: workoutKit)
             case DeleteScheduledWorkoutTool.toolName:
-                text = try await DeleteScheduledWorkoutTool.handle(args: args, manager: WorkoutKitManager())
+                text = try await DeleteScheduledWorkoutTool.handle(args: args, manager: workoutKit)
             default:
                 return CallTool.Result(
                     content: [.text(text: "Unknown tool: \(params.name)", annotations: nil, _meta: nil)],
