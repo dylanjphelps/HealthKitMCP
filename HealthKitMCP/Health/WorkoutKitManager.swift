@@ -46,15 +46,15 @@ actor WorkoutKitManager {
         let cooldownStep = cooldown.map { makeStep($0) }
 
         let intervalBlocks: [IntervalBlock] = blocks.flatMap { block -> [IntervalBlock] in
-            let workStep = IntervalStep(.work, goal: block.work.workoutGoal, alert: alert(for: block.work))
+            let workStep = IntervalStep(.work, step: makeStep(block.work))
             var steps: [IntervalStep] = [workStep]
             if let rest = block.rest {
-                steps.append(IntervalStep(.recovery, goal: rest.workoutGoal, alert: alert(for: rest)))
+                steps.append(IntervalStep(.recovery, step: makeStep(rest)))
             }
             let mainBlock = IntervalBlock(steps: steps, iterations: block.repeatCount)
             guard let restAfter = block.restAfter else { return [mainBlock] }
             let restBlock = IntervalBlock(
-                steps: [IntervalStep(.recovery, goal: restAfter.workoutGoal, alert: alert(for: restAfter))],
+                steps: [IntervalStep(.recovery, step: makeStep(restAfter))],
                 iterations: 1
             )
             return [mainBlock, restBlock]
