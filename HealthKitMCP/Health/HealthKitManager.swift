@@ -18,6 +18,11 @@ actor HealthKitManager {
             HKQuantityType(.appleExerciseTime),
             HKQuantityType(.heartRate),
             HKQuantityType(.distanceWalkingRunning),
+            HKQuantityType(.stepCount),
+            HKQuantityType(.runningPower),
+            HKQuantityType(.runningGroundContactTime),
+            HKQuantityType(.runningVerticalOscillation),
+            HKQuantityType(.runningStrideLength),
         ]
         try await store.requestAuthorization(toShare: [], read: readTypes)
     }
@@ -55,13 +60,47 @@ actor HealthKitManager {
                             .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
                         let hr = w.statistics(for: HKQuantityType(.heartRate))?
                             .averageQuantity()?.doubleValue(for: hrUnit)
+                        let maxHR = w.statistics(for: HKQuantityType(.heartRate))?
+                            .maximumQuantity()?.doubleValue(for: hrUnit)
+                        let elevUp = (w.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?
+                            .doubleValue(for: .meter())
+                        let elevDown = (w.metadata?[HKMetadataKeyElevationDescended] as? HKQuantity)?
+                            .doubleValue(for: .meter())
+                        let isIndoor = w.metadata?[HKMetadataKeyIndoorWorkout] as? Bool
+                        let avgPower = w.statistics(for: HKQuantityType(.runningPower))?
+                            .averageQuantity()?.doubleValue(for: .watt())
+                        let maxPower = w.statistics(for: HKQuantityType(.runningPower))?
+                            .maximumQuantity()?.doubleValue(for: .watt())
+                        let steps = w.statistics(for: HKQuantityType(.stepCount))?
+                            .sumQuantity()?.doubleValue(for: .count())
+                        let cadence = steps.map { $0 / w.duration * 60 }
+                        let strideLen = w.statistics(for: HKQuantityType(.runningStrideLength))?
+                            .averageQuantity()?.doubleValue(for: .meter())
+                        let vertOsc = w.statistics(for: HKQuantityType(.runningVerticalOscillation))?
+                            .averageQuantity()?.doubleValue(for: HKUnit.meterUnit(with: .centi))
+                        let gct = w.statistics(for: HKQuantityType(.runningGroundContactTime))?
+                            .averageQuantity()?.doubleValue(for: HKUnit.secondUnit(with: .milli))
                         return WorkoutResult(
                             date: iso.string(from: w.startDate),
                             duration_minutes: w.duration / 60,
                             distance_miles: distMiles,
                             pace_sec_per_mile: pace,
                             avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? Optional($0) : nil },
-                            active_calories: cal
+                            max_heart_rate_bpm: maxHR.flatMap { $0 > 0 ? Optional($0) : nil },
+                            active_calories: cal,
+                            elevation_ascended_meters: elevUp,
+                            elevation_descended_meters: elevDown,
+                            is_indoor: isIndoor,
+                            avg_running_power_watts: avgPower,
+                            max_running_power_watts: maxPower,
+                            avg_cadence_spm: cadence,
+                            avg_stride_length_meters: strideLen,
+                            avg_vertical_oscillation_cm: vertOsc,
+                            avg_ground_contact_time_ms: gct,
+                            weather_temperature_fahrenheit: (w.metadata?[HKMetadataKeyWeatherTemperature] as? HKQuantity)?
+                                .doubleValue(for: .degreeFahrenheit()),
+                            weather_humidity_percent: (w.metadata?[HKMetadataKeyWeatherHumidity] as? HKQuantity)
+                                .map { $0.doubleValue(for: .percent()) * 100 }
                         )
                     }
                 continuation.resume(returning: results)
