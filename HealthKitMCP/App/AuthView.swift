@@ -3,31 +3,29 @@ import SwiftUI
 
 struct AuthView: View {
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Image(systemName: "figure.run")
-                .font(.system(size: 48))
-                .foregroundColor(.accentColor)
+                .font(.system(size: 40))
+                .foregroundStyle(.tint)
 
             Text("WorkoutKit MCP")
                 .font(.title2.bold())
 
-            Text("Schedules running workouts to Apple Watch via Claude Desktop.")
+            Text("Generates running workouts and Shortcuts URLs for scheduling to Apple Watch.")
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Text("Add to Claude Desktop:")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            Divider()
 
             Text(Bundle.main.executableURL?.path ?? "")
-                .font(.system(.caption, design: .monospaced))
-                .foregroundColor(.secondary)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
         }
-        .padding(30)
-        .frame(width: 420, height: 280)
+        .padding(24)
+        .frame(width: 420, height: 200)
     }
 }

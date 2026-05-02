@@ -39,8 +39,6 @@ actor HealthKitMCPServer {
             switch params.name {
             case "schedule_workout":
                 text = try await ScheduleWorkoutTool.handle(args: args)
-            case "list_scheduled_workouts":
-                text = try await ListScheduledWorkoutsTool.handle()
             default:
                 return CallTool.Result(
                     content: [.text(text: "Unknown tool: \(params.name)", annotations: nil, _meta: nil)],
@@ -65,7 +63,7 @@ actor HealthKitMCPServer {
         [
             Tool(
                 name: "schedule_workout",
-                description: "Schedule a running workout for today using WorkoutKit. Define the workout as an ordered list of blocks — each block is a set of work/rest steps repeated N times. Supports any workout structure: easy runs, intervals, tempo, hill repeats, or complex multi-phase sessions.",
+                description: "Build and validate a structured running workout, then generate a Shortcuts URL to schedule it on Apple Watch via iPhone. The URL opens a Shortcut named 'Schedule Workout' on iPhone that handles the actual WorkoutKit scheduling. Supports any workout structure: easy runs, intervals, tempo, hill repeats, or complex multi-phase sessions.",
                 inputSchema: .object([
                     "type": .string("object"),
                     "properties": .object([
@@ -88,20 +86,18 @@ actor HealthKitMCPServer {
                             "items": .object([
                                 "type": .string("object"),
                                 "properties": .object([
-                                    "repeat_count": .object(["type": .string("number"), "description": .string("Repetitions (default 1 for single steps).")]),
+                                    "repeat_count": .object(["type": .string("number"), "description": .string("Repetitions (default 1).")]),
                                     "work": .object([
                                         "type": .string("object"),
-                                        "description": .string("Work step definition."),
                                         "properties": .object([
                                             "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
                                             "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
-                                            "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Target HR center point (±5 BPM range alert). Preferred over pace if both given.")]),
+                                            "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Target HR (±5 BPM). Preferred over pace if both given.")]),
                                             "target_pace_seconds_per_km": .object(["type": .string("number"), "description": .string("Target pace in sec/km (±10 sec/km range alert).")])
                                         ])
                                     ]),
                                     "rest": .object([
                                         "type": .string("object"),
-                                        "description": .string("Optional recovery step after each work step."),
                                         "properties": .object([
                                             "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
                                             "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
@@ -113,7 +109,7 @@ actor HealthKitMCPServer {
                         ]),
                         "cooldown": .object([
                             "type": .string("object"),
-                            "description": .string("Optional cooldown step after the main blocks. Same shape as warmup."),
+                            "description": .string("Optional cooldown step after the main blocks."),
                             "properties": .object([
                                 "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
                                 "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, km if distance.")]),
@@ -122,24 +118,10 @@ actor HealthKitMCPServer {
                         ]),
                         "scheduled_date": .object([
                             "type": .string("string"),
-                            "description": .string("Date to schedule the workout in YYYY-MM-DD format. Defaults to today.")
-                        ]),
-                        "dry_run": .object([
-                            "type": .string("boolean"),
-                            "description": .string("If true, validate and describe the workout without scheduling. Default false.")
+                            "description": .string("Date to schedule in YYYY-MM-DD format. Defaults to today.")
                         ])
                     ]),
                     "required": .array([.string("title"), .string("blocks")])
-                ])
-            )
-            ,
-            Tool(
-                name: "list_scheduled_workouts",
-                description: "List all workouts currently scheduled via WorkoutKit, and show the authorization state. Use this to verify that schedule_workout succeeded.",
-                inputSchema: .object([
-                    "type": .string("object"),
-                    "properties": .object([:]),
-                    "required": .array([])
                 ])
             )
         ]

@@ -2,7 +2,6 @@
 import Foundation
 import MCP
 
-@available(macOS 15.0, *)
 enum ScheduleWorkoutTool {
     static func handle(args: [String: Value]) async throws -> String {
         let title = args["title"]?.stringValue ?? ""
@@ -12,9 +11,7 @@ enum ScheduleWorkoutTool {
             return "Missing required parameter: blocks (must be a non-empty array)"
         }
 
-        let dryRun = args["dry_run"]?.boolValue ?? false
-        let scheduledDate = args["scheduled_date"]?.stringValue
-
+        let scheduledDate = args["scheduled_date"]?.stringValue ?? isoToday()
         let warmup = parseStepSpec(from: args["warmup"])
         let cooldown = parseStepSpec(from: args["cooldown"])
         let blocks = blockArray.compactMap { parseBlockSpec(from: $0) }
@@ -24,20 +21,60 @@ enum ScheduleWorkoutTool {
         }
 
         let manager = WorkoutKitManager()
-        let (workout, description) = try await manager.buildCustom(
+        let (_, description) = try await manager.buildCustom(
             title: title,
             warmup: warmup,
             blocks: blocks,
             cooldown: cooldown
         )
 
-        if dryRun {
-            return try encodeToJSON(DryRunResult(scheduled: false, valid: true, workout_description: description))
+        let shortcutsURL = buildShortcutsURL(
+            title: title,
+            date: scheduledDate,
+            description: description,
+            args: args
+        )
+
+        struct Result: Encodable {
+            let title: String
+            let date: String
+            let description: String
+            let shortcuts_url: String
+            let instructions: String
         }
 
-        try await manager.schedule(workout, on: scheduledDate)
-        return try encodeToJSON(ScheduleResult(scheduled: true, title: title, date: scheduledDate ?? "today"))
+        return try encodeToJSON(Result(
+            title: title,
+            date: scheduledDate,
+            description: description,
+            shortcuts_url: shortcutsURL,
+            instructions: "Open shortcuts_url on your iPhone to schedule this workout. Requires a Shortcut named 'Schedule Workout' — see setup instructions."
+        ))
     }
+
+    // MARK: - Shortcuts URL
+
+    private static func buildShortcutsURL(
+        title: String,
+        date: String,
+        description: String,
+        args: [String: Value]
+    ) -> String {
+        // Encode a JSON payload the Shortcut can read via "Get Dictionary from Input"
+        let payload: [String: Any] = [
+            "title": title,
+            "date": date,
+            "description": description
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let json = String(data: data, encoding: .utf8),
+              let encoded = json.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return "shortcuts://run-shortcut?name=Schedule%20Workout"
+        }
+        return "shortcuts://run-shortcut?name=Schedule%20Workout&input=\(encoded)"
+    }
+
+    // MARK: - Parsing
 
     private static func parseStepSpec(from value: Value?) -> StepSpec? {
         guard let value, case .object(let obj) = value else { return nil }
@@ -51,29 +88,16 @@ enum ScheduleWorkoutTool {
     private static func parseBlockSpec(from value: Value) -> BlockSpec? {
         guard case .object(let obj) = value else { return nil }
         let repeatCount: Int
-        if let v = obj["repeat_count"]?.intValue {
-            repeatCount = v
-        } else if let v = obj["repeat_count"]?.doubleValue {
-            repeatCount = Int(v)
-        } else {
-            repeatCount = 1
-        }
+        if let v = obj["repeat_count"]?.intValue { repeatCount = v }
+        else if let v = obj["repeat_count"]?.doubleValue { repeatCount = Int(v) }
+        else { repeatCount = 1 }
         guard let work = parseStepSpec(from: obj["work"]) else { return nil }
-        let rest = parseStepSpec(from: obj["rest"])
-        return BlockSpec(repeatCount: repeatCount, work: work, rest: rest)
+        return BlockSpec(repeatCount: repeatCount, work: work, rest: parseStepSpec(from: obj["rest"]))
     }
-}
 
-// MARK: - Response types
-
-private struct DryRunResult: Encodable {
-    let scheduled: Bool
-    let valid: Bool
-    let workout_description: String
-}
-
-private struct ScheduleResult: Encodable {
-    let scheduled: Bool
-    let title: String
-    let date: String
+    private static func isoToday() -> String {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withFullDate]
+        return f.string(from: Date())
+    }
 }
