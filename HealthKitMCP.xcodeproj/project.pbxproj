@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0BC000F7DD48BA3D97661527 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 60106F5ABDEB9BA9F2527F20 /* Assets.xcassets */; };
 		104D8C7D0743319F27CF9B58 /* WorkoutBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC016AAD7381E52DA04A1610 /* WorkoutBuilderTests.swift */; };
 		1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */; };
 		1E78FB65A855CF8E21B43A2C /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0F9B60D5839D632FF20383 /* App.swift */; };
@@ -40,6 +41,7 @@
 		1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutKitManager.swift; sourceTree = "<group>"; };
 		3052A2FCB100215D06C748B3 /* QueryRestingHeartRateTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryRestingHeartRateTool.swift; sourceTree = "<group>"; };
 		350ABF57745F56A56F651D35 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
+		60106F5ABDEB9BA9F2527F20 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		62DDAF2510C95F53830536B1 /* HealthKitMCPTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HealthKitMCPTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65999B87C71D2C185970863A /* HealthKitMCP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthKitMCP.entitlements; sourceTree = "<group>"; };
 		6AD29E322CC8457635169049 /* HTTPParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPParserTests.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 		DED9C9BE904DBFA75E592466 /* HealthKitMCP */ = {
 			isa = PBXGroup;
 			children = (
+				60106F5ABDEB9BA9F2527F20 /* Assets.xcassets */,
 				65999B87C71D2C185970863A /* HealthKitMCP.entitlements */,
 				7064B4297B3A50657303AD1A /* Info.plist */,
 				0C2994202BDF77926D37EC85 /* App */,
@@ -161,6 +164,7 @@
 			buildConfigurationList = 7A4CAD83184AFEBBF20D8C9F /* Build configuration list for PBXNativeTarget "HealthKitMCP" */;
 			buildPhases = (
 				E3FC7F17B2773AFBFCC6DF81 /* Sources */,
+				A677688DD27C6BD1631E1473 /* Resources */,
 				54DBE287B941E576FE40A12B /* Frameworks */,
 			);
 			buildRules = (
@@ -229,6 +233,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A677688DD27C6BD1631E1473 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0BC000F7DD48BA3D97661527 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AB8A7C3CBE4FB3D595AD9B60 /* Sources */ = {

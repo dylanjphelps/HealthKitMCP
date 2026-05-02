@@ -6,25 +6,34 @@ actor HealthKitManager {
 
     // MARK: - Authorization
 
+    // HKSampleType subset — used for statusForAuthorizationRequest (excludes activitySummaryType)
+    private static let readSampleTypes: Set<HKSampleType> = [
+        HKObjectType.workoutType(),
+        HKQuantityType(.restingHeartRate),
+        HKQuantityType(.vo2Max),
+        HKQuantityType(.stepCount),
+        HKQuantityType(.activeEnergyBurned),
+        HKQuantityType(.appleExerciseTime),
+        HKQuantityType(.heartRate),
+        HKQuantityType(.distanceWalkingRunning),
+        HKQuantityType(.runningPower),
+        HKQuantityType(.runningGroundContactTime),
+        HKQuantityType(.runningVerticalOscillation),
+        HKQuantityType(.runningStrideLength),
+    ]
+
     func requestAuthorization() async throws {
         guard HKHealthStore.isHealthDataAvailable() else { return }
-        let readTypes: Set<HKObjectType> = [
-            HKObjectType.workoutType(),
-            HKObjectType.activitySummaryType(),
-            HKQuantityType(.restingHeartRate),
-            HKQuantityType(.vo2Max),
-            HKQuantityType(.stepCount),
-            HKQuantityType(.activeEnergyBurned),
-            HKQuantityType(.appleExerciseTime),
-            HKQuantityType(.heartRate),
-            HKQuantityType(.distanceWalkingRunning),
-            HKQuantityType(.stepCount),
-            HKQuantityType(.runningPower),
-            HKQuantityType(.runningGroundContactTime),
-            HKQuantityType(.runningVerticalOscillation),
-            HKQuantityType(.runningStrideLength),
-        ]
-        try await store.requestAuthorization(toShare: [], read: readTypes)
+        var allTypes: Set<HKObjectType> = Set(Self.readSampleTypes)
+        allTypes.insert(HKObjectType.activitySummaryType())
+        try await store.requestAuthorization(toShare: [], read: allTypes)
+    }
+
+    static func needsAuthorization() async -> Bool {
+        guard HKHealthStore.isHealthDataAvailable() else { return false }
+        let store = HKHealthStore()
+        guard let status = try? await store.statusForAuthorizationRequest(toShare: [], read: readSampleTypes) else { return true }
+        return status == .shouldRequest
     }
 
     var isAuthorized: Bool {

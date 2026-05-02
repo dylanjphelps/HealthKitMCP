@@ -18,6 +18,9 @@ final class MCPService: ObservableObject {
         Task {
             workoutKitAuthorized = await WorkoutScheduler.shared.authorizationState == .authorized
         }
+        Task {
+            healthKitAuthorized = await !HealthKitManager.needsAuthorization()
+        }
 
         serverTask = Task {
             var currentServer = HealthKitMCPServer()

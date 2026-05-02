@@ -2,7 +2,7 @@ name: HealthKitMCP
 options:
   bundleIdPrefix: com.user
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "18.0"
   createIntermediateGroups: true
   xcodeVersion: "16"
   settings:
@@ -30,7 +30,7 @@ targets:
   HealthKitMCP:
     type: application
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "18.0"
     sources:
       - path: HealthKitMCP
     settings:
@@ -38,29 +38,33 @@ targets:
         SWIFT_VERSION: "5.9"
         PRODUCT_BUNDLE_IDENTIFIER: com.user.HealthKitMCP
         CODE_SIGN_STYLE: Automatic
-        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
       - package: swift-sdk
         product: MCP
     entitlements:
       path: HealthKitMCP/HealthKitMCP.entitlements
+      properties:
+        com.apple.developer.healthkit: true
     info:
       path: HealthKitMCP/Info.plist
       properties:
         CFBundleDisplayName: HealthKitMCP
+        CFBundleIconName: AppIcon
         NSHealthShareUsageDescription: "HealthKit MCP reads your fitness data to answer questions from Claude."
         NSHealthUpdateUsageDescription: "HealthKit MCP schedules running workouts to your Apple Watch via Claude."
         NSLocalNetworkUsageDescription: "HealthKit MCP serves a local network API so Claude Desktop on your Mac can connect."
   HealthKitMCPTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "18.0"
     sources:
       - path: HealthKitMCPTests
     settings:
       base:
         SWIFT_VERSION: "5.9"
-        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "18.0"
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: HealthKitMCP
