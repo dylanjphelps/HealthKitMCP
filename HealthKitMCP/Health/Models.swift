@@ -48,3 +48,10 @@ struct VO2MaxResult: Codable {
     let date: String
     let vo2max_ml_kg_min: Double
 }
+
+struct ScheduledWorkoutResult: Codable {
+    let index: Int
+    let date: String
+    let title: String
+    let type: String
+}

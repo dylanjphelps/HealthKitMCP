@@ -75,6 +75,16 @@ final class WorkoutBuilderTests: XCTestCase {
         XCTAssertEqual(decoded.vo2max_ml_kg_min, 52.3, accuracy: 0.001)
     }
 
+    func testScheduledWorkoutResultRoundTrip() throws {
+        let original = ScheduledWorkoutResult(index: 0, date: "2026-05-03", title: "Morning Run", type: "custom")
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(ScheduledWorkoutResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.index, 0)
+        XCTAssertEqual(decoded.date, "2026-05-03")
+        XCTAssertEqual(decoded.title, "Morning Run")
+        XCTAssertEqual(decoded.type, "custom")
+    }
+
     // MARK: - WorkoutKitManager description
 
     func testSimpleEasyRunDescription() async throws {
