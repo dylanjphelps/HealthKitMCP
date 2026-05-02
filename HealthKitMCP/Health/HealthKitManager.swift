@@ -63,9 +63,9 @@ actor HealthKitManager {
                         let maxHR = w.statistics(for: HKQuantityType(.heartRate))?
                             .maximumQuantity()?.doubleValue(for: hrUnit)
                         let elevUp = (w.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?
-                            .doubleValue(for: .meter())
+                            .doubleValue(for: .foot())
                         let elevDown = (w.metadata?[HKMetadataKeyElevationDescended] as? HKQuantity)?
-                            .doubleValue(for: .meter())
+                            .doubleValue(for: .foot())
                         let isIndoor = w.metadata?[HKMetadataKeyIndoorWorkout] as? Bool
                         let avgPower = w.statistics(for: HKQuantityType(.runningPower))?
                             .averageQuantity()?.doubleValue(for: .watt())
@@ -75,9 +75,9 @@ actor HealthKitManager {
                             .sumQuantity()?.doubleValue(for: .count())
                         let cadence = steps.map { $0 / w.duration * 60 }
                         let strideLen = w.statistics(for: HKQuantityType(.runningStrideLength))?
-                            .averageQuantity()?.doubleValue(for: .meter())
+                            .averageQuantity()?.doubleValue(for: .foot())
                         let vertOsc = w.statistics(for: HKQuantityType(.runningVerticalOscillation))?
-                            .averageQuantity()?.doubleValue(for: HKUnit.meterUnit(with: .centi))
+                            .averageQuantity()?.doubleValue(for: .inch())
                         let gct = w.statistics(for: HKQuantityType(.runningGroundContactTime))?
                             .averageQuantity()?.doubleValue(for: HKUnit.secondUnit(with: .milli))
                         return WorkoutResult(
@@ -88,14 +88,14 @@ actor HealthKitManager {
                             avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? Optional($0) : nil },
                             max_heart_rate_bpm: maxHR.flatMap { $0 > 0 ? Optional($0) : nil },
                             active_calories: cal,
-                            elevation_ascended_meters: elevUp,
-                            elevation_descended_meters: elevDown,
+                            elevation_ascended_feet: elevUp,
+                            elevation_descended_feet: elevDown,
                             is_indoor: isIndoor,
                             avg_running_power_watts: avgPower,
                             max_running_power_watts: maxPower,
                             avg_cadence_spm: cadence,
-                            avg_stride_length_meters: strideLen,
-                            avg_vertical_oscillation_cm: vertOsc,
+                            avg_stride_length_feet: strideLen,
+                            avg_vertical_oscillation_inches: vertOsc,
                             avg_ground_contact_time_ms: gct,
                             weather_temperature_fahrenheit: (w.metadata?[HKMetadataKeyWeatherTemperature] as? HKQuantity)?
                                 .doubleValue(for: .degreeFahrenheit()),

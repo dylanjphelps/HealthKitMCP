@@ -93,7 +93,7 @@ actor HealthKitMCPServer {
     private static var scheduleWorkoutToolDefinition: Tool {
         Tool(
             name: "schedule_workout",
-            description: "Schedules a structured running workout directly to Apple Watch via WorkoutKit. Supports warmup, interval blocks with work/rest steps, and cooldown. Each step can target heart rate or pace.",
+            description: "Schedules a structured running workout directly to Apple Watch via WorkoutKit. Supports warmup, a sequence of segments, and cooldown. Each segment in 'blocks' is either a standalone step (omit 'work' key — just provide goal_type/goal_value/targets directly) or an interval block (include a 'work' key with repeat_count and optional rest/rest_after). Use standalone steps for continuous efforts; use interval blocks for repeated work/rest cycles.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([
@@ -101,6 +101,7 @@ actor HealthKitMCPServer {
                     "warmup": .object([
                         "type": .string("object"),
                         "properties": .object([
+                            "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
                             "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
                             "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance.")]),
                             "target_heart_rate_bpm": .object(["type": .string("number")])
@@ -108,14 +109,15 @@ actor HealthKitMCPServer {
                     ]),
                     "blocks": .object([
                         "type": .string("array"),
+                        "description": .string("Sequence of segments between warmup and cooldown. Each item is either a standalone step (goal_type/goal_value/targets, no 'work' key) or an interval block ('work' key required, with repeat_count and optional rest/rest_after)."),
                         "items": .object([
                             "type": .string("object"),
                             "properties": .object([
-                                "repeat_count": .object(["type": .string("number"), "description": .string("Repetitions (default 1).")]),
+                                "repeat_count": .object(["type": .string("number"), "description": .string("Interval blocks only. Repetitions (default 1).")]),
                                 "work": .object([
                                     "type": .string("object"),
                                     "properties": .object([
-                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
+                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
                                         "goal_value": .object(["type": .string("number")]),
                                         "target_heart_rate_bpm": .object(["type": .string("number")]),
                                         "target_pace_seconds_per_mile": .object(["type": .string("number")])
@@ -124,8 +126,17 @@ actor HealthKitMCPServer {
                                 "rest": .object([
                                     "type": .string("object"),
                                     "properties": .object([
-                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
-                                        "goal_value": .object(["type": .string("number")]),
+                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                                        "goal_value": .object(["type": .string("number"), "description": .string("Omit when goal_type is open.")]),
+                                        "target_heart_rate_bpm": .object(["type": .string("number")])
+                                    ])
+                                ]),
+                                "rest_after": .object([
+                                    "type": .string("object"),
+                                    "description": .string("A single recovery block inserted after all iterations of this block complete. Use for inter-set rest (e.g. 3 min between sets)."),
+                                    "properties": .object([
+                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                                        "goal_value": .object(["type": .string("number"), "description": .string("Omit when goal_type is open.")]),
                                         "target_heart_rate_bpm": .object(["type": .string("number")])
                                     ])
                                 ])
@@ -135,6 +146,7 @@ actor HealthKitMCPServer {
                     "cooldown": .object([
                         "type": .string("object"),
                         "properties": .object([
+                            "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
                             "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
                             "goal_value": .object(["type": .string("number")]),
                             "target_heart_rate_bpm": .object(["type": .string("number")])

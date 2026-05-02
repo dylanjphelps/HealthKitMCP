@@ -17,14 +17,14 @@ struct WorkoutResult: Codable {
     let avg_heart_rate_bpm: Double?
     let max_heart_rate_bpm: Double?
     let active_calories: Double
-    let elevation_ascended_meters: Double?
-    let elevation_descended_meters: Double?
+    let elevation_ascended_feet: Double?
+    let elevation_descended_feet: Double?
     let is_indoor: Bool?
     let avg_running_power_watts: Double?
     let max_running_power_watts: Double?
     let avg_cadence_spm: Double?
-    let avg_stride_length_meters: Double?
-    let avg_vertical_oscillation_cm: Double?
+    let avg_stride_length_feet: Double?
+    let avg_vertical_oscillation_inches: Double?
     let avg_ground_contact_time_ms: Double?
     let weather_temperature_fahrenheit: Double?
     let weather_humidity_percent: Double?

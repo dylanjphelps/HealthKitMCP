@@ -55,17 +55,23 @@ enum ScheduleWorkoutTool {
         let goalValue = obj["goal_value"]?.doubleValue ?? obj["goal_value"]?.intValue.map(Double.init) ?? 0
         let pace = obj["target_pace_seconds_per_mile"]?.doubleValue ?? obj["target_pace_seconds_per_mile"]?.intValue.map(Double.init)
         let hr = obj["target_heart_rate_bpm"]?.doubleValue ?? obj["target_heart_rate_bpm"]?.intValue.map(Double.init)
-        return StepSpec(goalType: goalType, goalValue: goalValue, targetPaceSecPerMile: pace, targetHeartRateBpm: hr)
+        let displayName = obj["display_name"]?.stringValue
+        return StepSpec(goalType: goalType, goalValue: goalValue, targetPaceSecPerMile: pace, targetHeartRateBpm: hr, displayName: displayName)
     }
 
     private static func parseBlockSpec(from value: Value) -> BlockSpec? {
         guard case .object(let obj) = value else { return nil }
+        // No "work" key → standalone step, modeled as a single-iteration block
+        if obj["work"] == nil {
+            guard let step = parseStepSpec(from: value) else { return nil }
+            return BlockSpec(repeatCount: 1, work: step, rest: nil, restAfter: nil)
+        }
         let repeatCount: Int
         if let v = obj["repeat_count"]?.intValue { repeatCount = v }
         else if let v = obj["repeat_count"]?.doubleValue { repeatCount = Int(v) }
         else { repeatCount = 1 }
         guard let work = parseStepSpec(from: obj["work"]) else { return nil }
-        return BlockSpec(repeatCount: repeatCount, work: work, rest: parseStepSpec(from: obj["rest"]))
+        return BlockSpec(repeatCount: repeatCount, work: work, rest: parseStepSpec(from: obj["rest"]), restAfter: parseStepSpec(from: obj["rest_after"]))
     }
 
     private static func isoToday() -> String {
@@ -77,6 +83,7 @@ enum ScheduleWorkoutTool {
     private static func parseDate(from iso: String) -> Date {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withFullDate]
+        f.timeZone = .current
         return f.date(from: iso) ?? Date()
     }
 }

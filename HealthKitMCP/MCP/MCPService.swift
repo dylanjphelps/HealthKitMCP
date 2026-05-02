@@ -1,11 +1,13 @@
 import Foundation
 import Network
+import WorkoutKit
 
 @MainActor
 final class MCPService: ObservableObject {
     @Published var isRunning = false
     @Published var serverAddress = ""
     @Published var healthKitAuthorized = false
+    @Published var workoutKitAuthorized = false
 
     private var mcpServer: HealthKitMCPServer?
     private var httpServer: HTTPServer?
@@ -13,6 +15,9 @@ final class MCPService: ObservableObject {
 
     func start() {
         guard !isRunning else { return }
+        Task {
+            workoutKitAuthorized = await WorkoutScheduler.shared.authorizationState == .authorized
+        }
 
         serverTask = Task {
             var currentServer = HealthKitMCPServer()
@@ -62,6 +67,13 @@ final class MCPService: ObservableObject {
         Task {
             try? await mcpServer?.requestHealthKitAuthorization()
             healthKitAuthorized = true
+        }
+    }
+
+    func requestWorkoutKitAuth() {
+        Task {
+            let result = await WorkoutScheduler.shared.requestAuthorization()
+            workoutKitAuthorized = result == .authorized
         }
     }
 

@@ -9,11 +9,14 @@ struct StepSpec {
     let goalValue: Double     // minutes if time, miles if distance
     let targetPaceSecPerMile: Double?
     let targetHeartRateBpm: Double?
+    let displayName: String?
 
     var workoutGoal: WorkoutGoal {
-        goalType == "distance"
-            ? .distance(goalValue * 1609.344, .meters)
-            : .time(goalValue * 60, .seconds)
+        switch goalType {
+        case "distance": return .distance(goalValue, .miles)
+        case "open":     return .open
+        default:         return .time(goalValue * 60, .seconds)
+        }
     }
 }
 
@@ -21,6 +24,7 @@ struct BlockSpec {
     let repeatCount: Int
     let work: StepSpec
     let rest: StepSpec?
+    let restAfter: StepSpec?  // single recovery block emitted after all iterations
 }
 
 // MARK: - Manager
@@ -38,16 +42,22 @@ actor WorkoutKitManager {
             throw WorkoutError.invalidType("blocks array must not be empty")
         }
 
-        let warmupStep = warmup.map { WorkoutStep(goal: $0.workoutGoal, alert: alert(for: $0)) }
-        let cooldownStep = cooldown.map { WorkoutStep(goal: $0.workoutGoal, alert: alert(for: $0)) }
+        let warmupStep = warmup.map { makeStep($0) }
+        let cooldownStep = cooldown.map { makeStep($0) }
 
-        let intervalBlocks: [IntervalBlock] = blocks.map { block in
+        let intervalBlocks: [IntervalBlock] = blocks.flatMap { block -> [IntervalBlock] in
             let workStep = IntervalStep(.work, goal: block.work.workoutGoal, alert: alert(for: block.work))
             var steps: [IntervalStep] = [workStep]
             if let rest = block.rest {
                 steps.append(IntervalStep(.recovery, goal: rest.workoutGoal, alert: alert(for: rest)))
             }
-            return IntervalBlock(steps: steps, iterations: block.repeatCount)
+            let mainBlock = IntervalBlock(steps: steps, iterations: block.repeatCount)
+            guard let restAfter = block.restAfter else { return [mainBlock] }
+            let restBlock = IntervalBlock(
+                steps: [IntervalStep(.recovery, goal: restAfter.workoutGoal, alert: alert(for: restAfter))],
+                iterations: 1
+            )
+            return [mainBlock, restBlock]
         }
 
         let workout = CustomWorkout(
@@ -61,6 +71,12 @@ actor WorkoutKitManager {
 
         let description = describeWorkout(title: title, warmup: warmup, blocks: blocks, cooldown: cooldown)
         return (workout, description)
+    }
+
+    // MARK: - Step helpers
+
+    private func makeStep(_ spec: StepSpec) -> WorkoutStep {
+        WorkoutStep(goal: spec.workoutGoal, alert: alert(for: spec), displayName: spec.displayName)
     }
 
     // MARK: - Alert helpers
@@ -127,8 +143,14 @@ actor WorkoutKitManager {
 
     func schedule(_ workout: CustomWorkout, for date: Date) async throws {
         let scheduler = WorkoutScheduler.shared
-        if await scheduler.authorizationState == .notDetermined {
-            _ = await scheduler.requestAuthorization()
+        let state = await scheduler.authorizationState
+        if state == .notDetermined {
+            let granted = await scheduler.requestAuthorization()
+            guard granted == .authorized else {
+                throw WorkoutError.authorizationDenied
+            }
+        } else if state == .denied {
+            throw WorkoutError.authorizationDenied
         }
         var components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         components.calendar = Calendar.current
@@ -139,7 +161,12 @@ actor WorkoutKitManager {
 
 enum WorkoutError: Error, LocalizedError {
     case invalidType(String)
+    case authorizationDenied
     var errorDescription: String? {
-        switch self { case .invalidType(let m): return m }
+        switch self {
+        case .invalidType(let m): return m
+        case .authorizationDenied:
+            return "WorkoutKit access is denied. Re-enable it in Settings > Privacy & Security > Motion & Fitness, then try again."
+        }
     }
 }

@@ -48,6 +48,12 @@ struct ContentView: View {
             .buttonStyle(.bordered)
             .disabled(service.healthKitAuthorized)
 
+            Button(service.workoutKitAuthorized ? "Workout Scheduling: Authorized" : "Grant Workout Scheduling Access") {
+                service.requestWorkoutKitAuth()
+            }
+            .buttonStyle(.bordered)
+            .disabled(service.workoutKitAuthorized)
+
             Spacer()
 
             Text("Keep this app open while using Claude.")
