@@ -27,4 +27,8 @@ final class QueryToolParsingTests: XCTestCase {
     func testVO2MaxToolNameIsCorrect() {
         XCTAssertEqual(QueryVO2MaxTool.toolName, "query_vo2max")
     }
+
+    func testQueryScheduledWorkoutsToolName() {
+        XCTAssertEqual(QueryScheduledWorkoutsTool.toolName, "query_scheduled_workouts")
+    }
 }
