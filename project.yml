@@ -2,9 +2,9 @@ name: HealthKitMCP
 options:
   bundleIdPrefix: com.user
   deploymentTarget:
-    macOS: "15.0"
+    iOS: "17.0"
   createIntermediateGroups: true
-  xcodeVersion: "15"
+  xcodeVersion: "16"
   settings:
     base:
       SWIFT_VERSION: "5.9"
@@ -17,15 +17,20 @@ schemes:
     build:
       targets:
         HealthKitMCP: all
+        HealthKitMCPTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - HealthKitMCPTests
     archive:
       config: Release
 targets:
   HealthKitMCP:
     type: application
-    platform: macOS
-    deploymentTarget: "15.0"
+    platform: iOS
+    deploymentTarget: "17.0"
     sources:
       - path: HealthKitMCP
     settings:
@@ -33,14 +38,29 @@ targets:
         SWIFT_VERSION: "5.9"
         PRODUCT_BUNDLE_IDENTIFIER: com.user.HealthKitMCP
         CODE_SIGN_STYLE: Automatic
-        MACOSX_DEPLOYMENT_TARGET: "15.0"
-        CODE_SIGN_ENTITLEMENTS: HealthKitMCP/HealthKitMCP.entitlements
-        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     dependencies:
       - package: swift-sdk
         product: MCP
+    entitlements:
+      path: HealthKitMCP/HealthKitMCP.entitlements
     info:
       path: HealthKitMCP/Info.plist
       properties:
         CFBundleDisplayName: HealthKitMCP
-        NSPrincipalClass: NSApplication
+        NSHealthShareUsageDescription: "HealthKit MCP reads your fitness data to answer questions from Claude."
+        NSHealthUpdateUsageDescription: "HealthKit MCP schedules running workouts to your Apple Watch via Claude."
+        NSLocalNetworkUsageDescription: "HealthKit MCP serves a local network API so Claude Desktop on your Mac can connect."
+  HealthKitMCPTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: HealthKitMCPTests
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: HealthKitMCP

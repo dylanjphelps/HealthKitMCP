@@ -2,23 +2,21 @@
 import WorkoutKit
 import Foundation
 
-// MARK: - Step and Block specs (top-level, outside the actor)
+// MARK: - Step and Block specs
 
-@available(macOS 15.0, *)
 struct StepSpec {
     let goalType: String      // "time" | "distance"
-    let goalValue: Double     // minutes if time, km if distance
-    let targetPaceSecPerKm: Double?
+    let goalValue: Double     // minutes if time, miles if distance
+    let targetPaceSecPerMile: Double?
     let targetHeartRateBpm: Double?
 
     var workoutGoal: WorkoutGoal {
         goalType == "distance"
-            ? .distance(goalValue * 1000, .meters)
+            ? .distance(goalValue * 1609.344, .meters)
             : .time(goalValue * 60, .seconds)
     }
 }
 
-@available(macOS 15.0, *)
 struct BlockSpec {
     let repeatCount: Int
     let work: StepSpec
@@ -27,10 +25,9 @@ struct BlockSpec {
 
 // MARK: - Manager
 
-@available(macOS 15.0, *)
 actor WorkoutKitManager {
 
-    /// Builds a CustomWorkout from the blocks-based schema and returns a human-readable description.
+    /// Validates the workout structure and returns a human-readable description.
     func buildCustom(
         title: String,
         warmup: StepSpec?,
@@ -62,89 +59,38 @@ actor WorkoutKitManager {
             cooldown: cooldownStep
         )
 
-        let description = describeCustomWorkout(title: title, warmup: warmup, blocks: blocks, cooldown: cooldown)
+        let description = describeWorkout(title: title, warmup: warmup, blocks: blocks, cooldown: cooldown)
         return (workout, description)
     }
 
-    /// Returns the current WorkoutScheduler authorization state as a readable string.
-    func authorizationState() async -> String {
-        switch await WorkoutScheduler.shared.authorizationState {
-        case .notDetermined: return "notDetermined"
-        case .authorized:    return "authorized"
-        case .denied:        return "denied"
-        case .restricted:    return "restricted"
-        @unknown default:    return "unknown"
-        }
-    }
-
-    /// Wraps the CustomWorkout in a WorkoutPlan and schedules it via WorkoutScheduler.
-    /// Throws if the scheduler is not authorized. scheduledDate: YYYY-MM-DD, defaults to today.
-    func schedule(_ workout: CustomWorkout, on scheduledDate: String? = nil) async throws {
-        let state = await WorkoutScheduler.shared.authorizationState
-        guard state == .authorized else {
-            throw WorkoutError.invalidType(
-                "WorkoutScheduler is not authorized (state: \(state)). " +
-                "Open System Settings → Privacy & Security → Fitness and allow access for HealthKitMCP."
-            )
-        }
-        let plan = WorkoutPlan(.custom(workout))
-        let resolved: Date
-        if let s = scheduledDate, let parsed = Self.isoDay.date(from: s) {
-            resolved = parsed
-        } else {
-            resolved = Date()
-        }
-        let components = Calendar.current.dateComponents([.year, .month, .day], from: resolved)
-        await WorkoutScheduler.shared.schedule(plan, at: components)
-    }
-
-    /// Returns all currently scheduled workout plans.
-    func listScheduled() async -> [ScheduledWorkoutPlan] {
-        await WorkoutScheduler.shared.scheduledWorkouts
-    }
-
-    private static let isoDay: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withFullDate]
-        return f
-    }()
-
     // MARK: - Alert helpers
 
-    /// Returns the appropriate WorkoutAlert for a step, preferring HR over pace.
     private func alert(for step: StepSpec) -> (any WorkoutAlert)? {
         if let bpm = step.targetHeartRateBpm {
             return heartRateAlert(bpm: bpm)
-        } else if let pace = step.targetPaceSecPerKm {
-            return paceAlert(paceSecPerKm: pace, toleranceSec: 10)
+        } else if let pace = step.targetPaceSecPerMile {
+            return paceAlert(paceSecPerMile: pace, toleranceSec: 10)
         }
         return nil
     }
 
-    /// Converts a target pace (seconds/km) ± tolerance into a SpeedRangeAlert (m/s).
-    /// WorkoutKit does not expose a pace alert; speed = 1000 / paceSecPerKm.
-    private func paceAlert(paceSecPerKm: Double, toleranceSec: Double) -> SpeedRangeAlert {
-        // Faster pace (fewer seconds) → higher speed; clamp to avoid div/0
-        let slowPace = paceSecPerKm + toleranceSec
-        let fastPace = max(paceSecPerKm - toleranceSec, 1.0)
-        let slowSpeedMps = 1000.0 / slowPace
-        let fastSpeedMps = 1000.0 / fastPace
+    private func paceAlert(paceSecPerMile: Double, toleranceSec: Double) -> SpeedRangeAlert {
+        let slowPace = paceSecPerMile + toleranceSec
+        let fastPace = max(paceSecPerMile - toleranceSec, 1.0)
         return SpeedRangeAlert(
-            target: Measurement(value: slowSpeedMps, unit: .metersPerSecond)
-                ... Measurement(value: fastSpeedMps, unit: .metersPerSecond),
+            target: Measurement(value: 1609.344 / slowPace, unit: .metersPerSecond)
+                ... Measurement(value: 1609.344 / fastPace, unit: .metersPerSecond),
             metric: .current
         )
     }
 
-    /// Creates a HeartRateRangeAlert centered on bpm with ±5 BPM tolerance.
-    /// Uses the static convenience initializer: .heartRate(_ range: ClosedRange<Double>, unit: UnitFrequency)
     private func heartRateAlert(bpm: Double) -> HeartRateRangeAlert {
         return .heartRate((bpm - 5)...(bpm + 5))
     }
 
     // MARK: - Description
 
-    private func describeCustomWorkout(
+    func describeWorkout(
         title: String,
         warmup: StepSpec?,
         blocks: [BlockSpec],
@@ -152,56 +98,48 @@ actor WorkoutKitManager {
     ) -> String {
         var parts: [String] = []
 
-        if let w = warmup {
-            parts.append(describeStep(w, label: "warmup"))
-        }
+        if let w = warmup { parts.append(stepLabel(w) + " warmup") }
 
         for block in blocks {
-            let workDesc = describeStepShort(block.work)
+            let workDesc = stepLabel(block.work)
             if let rest = block.rest {
-                let restDesc = describeStepShort(rest)
-                let blockDesc = block.repeatCount > 1
+                let restDesc = stepLabel(rest)
+                parts.append(block.repeatCount > 1
                     ? "\(block.repeatCount)×(\(workDesc) + \(restDesc) recovery)"
-                    : "(\(workDesc) + \(restDesc) recovery)"
-                parts.append(blockDesc)
+                    : "(\(workDesc) + \(restDesc) recovery)")
             } else {
-                let blockDesc = block.repeatCount > 1
+                parts.append(block.repeatCount > 1
                     ? "\(block.repeatCount)×\(workDesc)"
-                    : workDesc
-                parts.append(blockDesc)
+                    : workDesc)
             }
         }
 
-        if let c = cooldown {
-            parts.append(describeStep(c, label: "cooldown"))
-        }
+        if let c = cooldown { parts.append(stepLabel(c) + " cooldown") }
 
         return parts.joined(separator: " → ")
     }
 
-    private func describeStep(_ step: StepSpec, label: String) -> String {
-        let goalDesc = step.goalType == "distance"
-            ? "\(step.goalValue)km"
-            : "\(step.goalValue)min"
-        return "\(goalDesc) \(label)"
+    private func stepLabel(_ step: StepSpec) -> String {
+        step.goalType == "distance" ? "\(step.goalValue)mi" : "\(step.goalValue)min"
     }
 
-    private func describeStepShort(_ step: StepSpec) -> String {
-        return step.goalType == "distance"
-            ? "\(step.goalValue)km"
-            : "\(step.goalValue)min"
+    // MARK: - Scheduling
+
+    func schedule(_ workout: CustomWorkout, for date: Date) async throws {
+        let scheduler = WorkoutScheduler.shared
+        if await scheduler.authorizationState == .notDetermined {
+            _ = await scheduler.requestAuthorization()
+        }
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        components.calendar = Calendar.current
+        let plan = WorkoutPlan(.custom(workout))
+        await scheduler.schedule(plan, at: components)
     }
-
-
 }
 
 enum WorkoutError: Error, LocalizedError {
     case invalidType(String)
-
     var errorDescription: String? {
-        switch self {
-        case .invalidType(let message):
-            return message
-        }
+        switch self { case .invalidType(let m): return m }
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1500"
+   LastUpgradeVersion = "1600"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -18,6 +18,20 @@
                BlueprintIdentifier = "0AB19BDD762426B13D37AE13"
                BuildableName = "HealthKitMCP.app"
                BlueprintName = "HealthKitMCP"
+               ReferencedContainer = "container:HealthKitMCP.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D79B4CB436690884B03BB340"
+               BuildableName = "HealthKitMCPTests.xctest"
+               BlueprintName = "HealthKitMCPTests"
                ReferencedContainer = "container:HealthKitMCP.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -39,7 +53,20 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D79B4CB436690884B03BB340"
+               BuildableName = "HealthKitMCPTests.xctest"
+               BlueprintName = "HealthKitMCPTests"
+               ReferencedContainer = "container:HealthKitMCP.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
