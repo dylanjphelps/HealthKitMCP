@@ -7,14 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		104D8C7D0743319F27CF9B58 /* WorkoutBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC016AAD7381E52DA04A1610 /* WorkoutBuilderTests.swift */; };
 		1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */; };
-		467CE755AB96C382F002B9B3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D141A40F73E5D2F05F0596 /* main.swift */; };
+		1E78FB65A855CF8E21B43A2C /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0F9B60D5839D632FF20383 /* App.swift */; };
 		54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE4495175C870FC90B419F /* Models.swift */; };
 		736618DA71A1243517A3AAA6 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 63267DFA5C0706B1A6CB09B0 /* MCP */; };
-		941BC7DA6DBE4A3E65615062 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBBD330BD887EC6A514B5F88 /* AuthView.swift */; };
 		C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */; };
 		CE523664A9C21A5C3A830FFE /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350ABF57745F56A56F651D35 /* Server.swift */; };
-		EAEF8B7BCCA4790C6FA56BDE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF6E747884FEF6AAA2B6F59 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,17 +27,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		00D141A40F73E5D2F05F0596 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutKitManager.swift; sourceTree = "<group>"; };
 		350ABF57745F56A56F651D35 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
-		3EF6E747884FEF6AAA2B6F59 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		62DDAF2510C95F53830536B1 /* HealthKitMCPTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HealthKitMCPTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65999B87C71D2C185970863A /* HealthKitMCP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthKitMCP.entitlements; sourceTree = "<group>"; };
 		6FDE4495175C870FC90B419F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7064B4297B3A50657303AD1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BB0F9B60D5839D632FF20383 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleWorkoutTool.swift; sourceTree = "<group>"; };
-		EBBD330BD887EC6A514B5F88 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		DC016AAD7381E52DA04A1610 /* WorkoutBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutBuilderTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,9 +54,7 @@
 		0C2994202BDF77926D37EC85 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				3EF6E747884FEF6AAA2B6F59 /* AppDelegate.swift */,
-				EBBD330BD887EC6A514B5F88 /* AuthView.swift */,
-				00D141A40F73E5D2F05F0596 /* main.swift */,
+				BB0F9B60D5839D632FF20383 /* App.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -75,6 +71,7 @@
 		67C6B6C1D78AA39AE44715DE /* HealthKitMCPTests */ = {
 			isa = PBXGroup;
 			children = (
+				DC016AAD7381E52DA04A1610 /* WorkoutBuilderTests.swift */,
 			);
 			path = HealthKitMCPTests;
 			sourceTree = "<group>";
@@ -208,6 +205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				104D8C7D0743319F27CF9B58 /* WorkoutBuilderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,13 +213,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EAEF8B7BCCA4790C6FA56BDE /* AppDelegate.swift in Sources */,
-				941BC7DA6DBE4A3E65615062 /* AuthView.swift in Sources */,
+				1E78FB65A855CF8E21B43A2C /* App.swift in Sources */,
 				54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */,
 				1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */,
 				CE523664A9C21A5C3A830FFE /* Server.swift in Sources */,
 				C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */,
-				467CE755AB96C382F002B9B3 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,6 +299,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -341,6 +338,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
