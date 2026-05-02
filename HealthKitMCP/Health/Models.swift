@@ -12,8 +12,8 @@ func encodeToJSON<T: Encodable>(_ value: T) throws -> String {
 struct WorkoutResult: Codable {
     let date: String
     let duration_minutes: Double
-    let distance_km: Double
-    let pace_sec_per_km: Double
+    let distance_miles: Double
+    let pace_sec_per_mile: Double
     let avg_heart_rate_bpm: Double?
     let active_calories: Double
 }

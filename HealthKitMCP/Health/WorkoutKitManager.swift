@@ -6,13 +6,13 @@ import Foundation
 
 struct StepSpec {
     let goalType: String      // "time" | "distance"
-    let goalValue: Double     // minutes if time, km if distance
-    let targetPaceSecPerKm: Double?
+    let goalValue: Double     // minutes if time, miles if distance
+    let targetPaceSecPerMile: Double?
     let targetHeartRateBpm: Double?
 
     var workoutGoal: WorkoutGoal {
         goalType == "distance"
-            ? .distance(goalValue * 1000, .meters)
+            ? .distance(goalValue * 1609.344, .meters)
             : .time(goalValue * 60, .seconds)
     }
 }
@@ -68,18 +68,18 @@ actor WorkoutKitManager {
     private func alert(for step: StepSpec) -> (any WorkoutAlert)? {
         if let bpm = step.targetHeartRateBpm {
             return heartRateAlert(bpm: bpm)
-        } else if let pace = step.targetPaceSecPerKm {
-            return paceAlert(paceSecPerKm: pace, toleranceSec: 10)
+        } else if let pace = step.targetPaceSecPerMile {
+            return paceAlert(paceSecPerMile: pace, toleranceSec: 10)
         }
         return nil
     }
 
-    private func paceAlert(paceSecPerKm: Double, toleranceSec: Double) -> SpeedRangeAlert {
-        let slowPace = paceSecPerKm + toleranceSec
-        let fastPace = max(paceSecPerKm - toleranceSec, 1.0)
+    private func paceAlert(paceSecPerMile: Double, toleranceSec: Double) -> SpeedRangeAlert {
+        let slowPace = paceSecPerMile + toleranceSec
+        let fastPace = max(paceSecPerMile - toleranceSec, 1.0)
         return SpeedRangeAlert(
-            target: Measurement(value: 1000.0 / slowPace, unit: .metersPerSecond)
-                ... Measurement(value: 1000.0 / fastPace, unit: .metersPerSecond),
+            target: Measurement(value: 1609.344 / slowPace, unit: .metersPerSecond)
+                ... Measurement(value: 1609.344 / fastPace, unit: .metersPerSecond),
             metric: .current
         )
     }
@@ -120,7 +120,7 @@ actor WorkoutKitManager {
     }
 
     private func stepLabel(_ step: StepSpec) -> String {
-        step.goalType == "distance" ? "\(step.goalValue)km" : "\(step.goalValue)min"
+        step.goalType == "distance" ? "\(step.goalValue)mi" : "\(step.goalValue)min"
     }
 
     // MARK: - Scheduling

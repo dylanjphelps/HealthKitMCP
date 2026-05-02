@@ -48,10 +48,9 @@ actor HealthKitManager {
                 let results = (samples as? [HKWorkout] ?? [])
                     .filter { $0.workoutActivityType == .running }
                     .map { w -> WorkoutResult in
-                        let distM = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?
-                            .sumQuantity()?.doubleValue(for: .meter()) ?? 0
-                        let distKm = distM / 1000
-                        let pace = distKm > 0 ? w.duration / distKm : 0
+                        let distMiles = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?
+                            .sumQuantity()?.doubleValue(for: .mile()) ?? 0
+                        let pace = distMiles > 0 ? w.duration / distMiles : 0
                         let cal = w.statistics(for: HKQuantityType(.activeEnergyBurned))?
                             .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
                         let hr = w.statistics(for: HKQuantityType(.heartRate))?
@@ -59,8 +58,8 @@ actor HealthKitManager {
                         return WorkoutResult(
                             date: iso.string(from: w.startDate),
                             duration_minutes: w.duration / 60,
-                            distance_km: distKm,
-                            pace_sec_per_km: pace,
+                            distance_miles: distMiles,
+                            pace_sec_per_mile: pace,
                             avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? Optional($0) : nil },
                             active_calories: cal
                         )
