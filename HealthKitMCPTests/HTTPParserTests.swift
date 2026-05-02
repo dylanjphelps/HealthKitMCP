@@ -38,4 +38,9 @@ final class HTTPParserTests: XCTestCase {
         let headerData = Data("GET /mcp HTTP/1.1\r\nHost: x".utf8)
         XCTAssertNil(HTTPServer.parseContentLength(from: headerData))
     }
+
+    func testMalformedRequestLineReturnsNil() {
+        let data = Data("BADREQUEST\r\n\r\n".utf8)
+        XCTAssertNil(HTTPServer.parseRequest(data))
+    }
 }
