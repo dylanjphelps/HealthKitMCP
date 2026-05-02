@@ -10,14 +10,26 @@ final class WorkoutBuilderTests: XCTestCase {
         let original = WorkoutResult(
             date: "2026-04-28T06:00:00Z",
             duration_minutes: 45.0,
-            distance_km: 8.5,
-            pace_sec_per_km: 318.0,
+            distance_miles: 5.3,
+            pace_sec_per_mile: 510.0,
             avg_heart_rate_bpm: 152.0,
-            active_calories: 520.0
+            max_heart_rate_bpm: nil,
+            active_calories: 520.0,
+            elevation_ascended_feet: nil,
+            elevation_descended_feet: nil,
+            is_indoor: nil,
+            avg_running_power_watts: nil,
+            max_running_power_watts: nil,
+            avg_cadence_spm: nil,
+            avg_stride_length_feet: nil,
+            avg_vertical_oscillation_inches: nil,
+            avg_ground_contact_time_ms: nil,
+            weather_temperature_fahrenheit: nil,
+            weather_humidity_percent: nil
         )
         let json = try encodeToJSON(original)
         let decoded = try JSONDecoder().decode(WorkoutResult.self, from: Data(json.utf8))
-        XCTAssertEqual(decoded.distance_km, 8.5)
+        XCTAssertEqual(decoded.distance_miles, 5.3)
         XCTAssertEqual(decoded.avg_heart_rate_bpm, 152.0)
         XCTAssertEqual(decoded.duration_minutes, 45.0)
     }
@@ -26,10 +38,22 @@ final class WorkoutBuilderTests: XCTestCase {
         let original = WorkoutResult(
             date: "2026-04-28T06:00:00Z",
             duration_minutes: 30.0,
-            distance_km: 5.0,
-            pace_sec_per_km: 360.0,
+            distance_miles: 3.1,
+            pace_sec_per_mile: 580.0,
             avg_heart_rate_bpm: nil,
-            active_calories: 300.0
+            max_heart_rate_bpm: nil,
+            active_calories: 300.0,
+            elevation_ascended_feet: nil,
+            elevation_descended_feet: nil,
+            is_indoor: nil,
+            avg_running_power_watts: nil,
+            max_running_power_watts: nil,
+            avg_cadence_spm: nil,
+            avg_stride_length_feet: nil,
+            avg_vertical_oscillation_inches: nil,
+            avg_ground_contact_time_ms: nil,
+            weather_temperature_fahrenheit: nil,
+            weather_humidity_percent: nil
         )
         let json = try encodeToJSON(original)
         let decoded = try JSONDecoder().decode(WorkoutResult.self, from: Data(json.utf8))
@@ -55,17 +79,17 @@ final class WorkoutBuilderTests: XCTestCase {
 
     func testSimpleEasyRunDescription() async throws {
         let manager = WorkoutKitManager()
-        let work = StepSpec(goalType: "distance", goalValue: 5, targetPaceSecPerKm: nil, targetHeartRateBpm: 140)
-        let block = BlockSpec(repeatCount: 1, work: work, rest: nil)
-        let desc = await manager.describeWorkout(title: "Easy 5k", warmup: nil, blocks: [block], cooldown: nil)
-        XCTAssertEqual(desc, "5.0km")
+        let work = StepSpec(goalType: "distance", goalValue: 5, targetPaceSecPerMile: nil, targetHeartRateBpm: 140, displayName: nil)
+        let block = BlockSpec(repeatCount: 1, work: work, rest: nil, restAfter: nil)
+        let desc = await manager.describeWorkout(title: "Easy 5mi", warmup: nil, blocks: [block], cooldown: nil)
+        XCTAssertEqual(desc, "5.0mi")
     }
 
     func testIntervalBlockDescription() async throws {
         let manager = WorkoutKitManager()
-        let work = StepSpec(goalType: "time", goalValue: 3, targetPaceSecPerKm: 270, targetHeartRateBpm: nil)
-        let rest = StepSpec(goalType: "time", goalValue: 1.5, targetPaceSecPerKm: nil, targetHeartRateBpm: nil)
-        let block = BlockSpec(repeatCount: 6, work: work, rest: rest)
+        let work = StepSpec(goalType: "time", goalValue: 3, targetPaceSecPerMile: 270, targetHeartRateBpm: nil, displayName: nil)
+        let rest = StepSpec(goalType: "time", goalValue: 1.5, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil)
+        let block = BlockSpec(repeatCount: 6, work: work, rest: rest, restAfter: nil)
         let desc = await manager.describeWorkout(title: "6x3min", warmup: nil, blocks: [block], cooldown: nil)
         XCTAssertEqual(desc, "6×(3.0min + 1.5min recovery)")
     }
