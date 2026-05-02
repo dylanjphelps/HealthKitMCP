@@ -33,6 +33,7 @@ actor HealthKitManager {
         let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
+        let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
             let q = HKSampleQuery(
@@ -66,7 +67,7 @@ actor HealthKitManager {
                     }
                 continuation.resume(returning: results)
             }
-            self.store.execute(q)
+            store.execute(q)
         }
     }
 
@@ -103,6 +104,7 @@ actor HealthKitManager {
         let startC = calendar.dateComponents([.year, .month, .day], from: start)
         let endC = calendar.dateComponents([.year, .month, .day], from: end)
         let predicate = HKQuery.predicate(forActivitySummariesBetweenStart: startC, end: endC)
+        let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
             let q = HKActivitySummaryQuery(predicate: predicate) { _, summaries, error in
@@ -119,7 +121,7 @@ actor HealthKitManager {
                 }
                 continuation.resume(returning: results)
             }
-            self.store.execute(q)
+            store.execute(q)
         }
     }
 
@@ -129,6 +131,7 @@ actor HealthKitManager {
         let anchor = Calendar.current.startOfDay(for: start)
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
+        let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
             let q = HKStatisticsCollectionQuery(
@@ -148,7 +151,7 @@ actor HealthKitManager {
                 }
                 continuation.resume(returning: dict)
             }
-            self.store.execute(q)
+            store.execute(q)
         }
     }
 
@@ -163,6 +166,7 @@ actor HealthKitManager {
         let unit = HKUnit(from: "count/min")
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
+        let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
             let q = HKStatisticsCollectionQuery(
@@ -174,18 +178,19 @@ actor HealthKitManager {
             )
             q.initialResultsHandler = { _, results, error in
                 if let error { continuation.resume(throwing: error); return }
-                let data = (results?.statistics() ?? []).compactMap { stats -> RestingHRResult? in
-                    guard let avg = stats.averageQuantity() else { return nil }
-                    return RestingHRResult(
+                var data: [RestingHRResult] = []
+                results?.enumerateStatistics(from: start, to: end) { stats, _ in
+                    guard let avg = stats.averageQuantity() else { return }
+                    data.append(RestingHRResult(
                         date: formatter.string(from: stats.startDate),
                         avg_bpm: avg.doubleValue(for: unit),
                         min_bpm: stats.minimumQuantity()?.doubleValue(for: unit),
                         max_bpm: stats.maximumQuantity()?.doubleValue(for: unit)
-                    )
+                    ))
                 }
                 continuation.resume(returning: data)
             }
-            self.store.execute(q)
+            store.execute(q)
         }
     }
 
@@ -195,6 +200,7 @@ actor HealthKitManager {
         let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
         let unit = HKUnit(from: "ml/kg*min")
         let iso = ISO8601DateFormatter()
+        let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
             let q = HKSampleQuery(
@@ -213,7 +219,7 @@ actor HealthKitManager {
                     vo2max_ml_kg_min: sample.quantity.doubleValue(for: unit)
                 ))
             }
-            self.store.execute(q)
+            store.execute(q)
         }
     }
 }
