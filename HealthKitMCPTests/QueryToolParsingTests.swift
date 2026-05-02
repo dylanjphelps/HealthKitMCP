@@ -85,6 +85,25 @@ final class QueryToolParsingTests: XCTestCase {
         XCTAssertEqual(block?.steps[1].purpose, .recovery)
     }
 
+    func testParseIntervalBlockEmptyStepsReturnsNil() {
+        let value = Value.object([
+            "steps": .array([])
+        ])
+        let block = ScheduleWorkoutTool.parseBlockSpec(from: value)
+        XCTAssertNil(block)
+    }
+
+    func testParseIntervalBlockDefaultRepeatCount() {
+        let value = Value.object([
+            "steps": .array([
+                .object(["purpose": .string("work"), "goal_type": .string("time"), "goal_value": .int(5)])
+            ])
+        ])
+        let block = ScheduleWorkoutTool.parseBlockSpec(from: value)
+        XCTAssertNotNil(block)
+        XCTAssertEqual(block?.repeatCount, 1)
+    }
+
     func testParseIntervalBlockThreeSteps() {
         let value = Value.object([
             "repeat_count": .int(3),

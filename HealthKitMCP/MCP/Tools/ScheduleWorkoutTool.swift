@@ -72,7 +72,7 @@ enum ScheduleWorkoutTool {
         if let v = obj["repeat_count"]?.intValue { repeatCount = v }
         else if let v = obj["repeat_count"]?.doubleValue { repeatCount = Int(v) }
         else { repeatCount = 1 }
-        let steps: [(IntervalStep.Purpose, StepSpec)] = stepsArray.compactMap { stepValue in
+        let steps: [(purpose: IntervalStep.Purpose, spec: StepSpec)] = stepsArray.compactMap { stepValue in
             guard case .object(let stepObj) = stepValue,
                   let spec = parseStepSpec(from: stepValue) else { return nil }
             let purpose: IntervalStep.Purpose = stepObj["purpose"]?.stringValue == "recovery" ? .recovery : .work
