@@ -4,7 +4,7 @@ An iOS app that gives Claude Desktop access to your HealthKit fitness data and l
 
 ## Requirements
 
-- iPhone with iOS 17.0+ and Health app data
+- iPhone with iOS 18.0+ and Health app data
 - Mac with Claude Desktop
 - Xcode (any recent version) + a free Apple ID
 - Both devices on the same Wi-Fi network
