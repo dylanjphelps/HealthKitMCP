@@ -122,6 +122,19 @@ actor WorkoutKitManager {
     private func stepLabel(_ step: StepSpec) -> String {
         step.goalType == "distance" ? "\(step.goalValue)km" : "\(step.goalValue)min"
     }
+
+    // MARK: - Scheduling
+
+    func schedule(_ workout: CustomWorkout, for date: Date) async throws {
+        let scheduler = WorkoutScheduler.shared
+        if await scheduler.authorizationState == .notDetermined {
+            await scheduler.requestAuthorization()
+        }
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        components.calendar = Calendar.current
+        let plan = WorkoutPlan(.custom(workout))
+        await scheduler.schedule(plan, at: components)
+    }
 }
 
 enum WorkoutError: Error, LocalizedError {
