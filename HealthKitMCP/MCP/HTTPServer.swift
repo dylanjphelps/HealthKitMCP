@@ -56,6 +56,15 @@ actor HTTPServer {
 
         while true {
             guard let chunk = await receiveChunk(from: connection), !chunk.isEmpty else {
+                // Connection closed or errored — only return data if no body was expected
+                if let sepRange = buffer.range(of: sep) {
+                    let headerBytes = buffer[..<sepRange.lowerBound]
+                    let bodyStart = sepRange.upperBound
+                    if let contentLength = Self.parseContentLength(from: headerBytes) {
+                        // Body was expected but not fully received
+                        return buffer.count >= bodyStart + contentLength ? Data(buffer[..<(bodyStart + contentLength)]) : nil
+                    }
+                }
                 return buffer.isEmpty ? nil : buffer
             }
             buffer.append(chunk)
