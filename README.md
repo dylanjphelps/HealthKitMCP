@@ -28,7 +28,12 @@ The app displays the config snippet. Copy it and paste into `~/Library/Applicati
 {
   "mcpServers": {
     "healthkit": {
-      "url": "http://192.168.1.x:8080/mcp"
+      "command": "/opt/homebrew/bin/npx",
+      "args": [
+        "mcp-remote@latest",
+        "http://192.168.1.0:8080/mcp",
+        "--allow-http"
+      ]
     }
   }
 }
