@@ -157,6 +157,37 @@ actor WorkoutKitManager {
         let plan = WorkoutPlan(.custom(workout))
         await scheduler.schedule(plan, at: components)
     }
+
+    func queryScheduled() async throws -> [ScheduledWorkoutResult] {
+        let scheduler = WorkoutScheduler.shared
+        let state = await scheduler.authorizationState
+        if state == .notDetermined {
+            let granted = await scheduler.requestAuthorization()
+            guard granted == .authorized else { throw WorkoutError.authorizationDenied }
+        } else if state == .denied {
+            throw WorkoutError.authorizationDenied
+        }
+        let plans = await scheduler.scheduledWorkouts
+        return plans.enumerated().map { index, scheduled in
+            let (title, type) = workoutInfo(from: scheduled.plan)
+            let date = dateString(from: scheduled.date)
+            return ScheduledWorkoutResult(index: index, date: date, title: title, type: type)
+        }
+    }
+
+    private func workoutInfo(from plan: WorkoutPlan) -> (title: String, type: String) {
+        if let custom = plan.workout as? CustomWorkout {
+            return (custom.displayName ?? "(unnamed)", "custom")
+        }
+        return ("(unnamed)", "unknown")
+    }
+
+    private func dateString(from components: DateComponents) -> String {
+        guard let year = components.year, let month = components.month, let day = components.day else {
+            return "(unknown date)"
+        }
+        return String(format: "%04d-%02d-%02d", year, month, day)
+    }
 }
 
 enum WorkoutError: Error, LocalizedError {
