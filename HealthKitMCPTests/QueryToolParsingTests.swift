@@ -31,4 +31,16 @@ final class QueryToolParsingTests: XCTestCase {
     func testQueryScheduledWorkoutsToolName() {
         XCTAssertEqual(QueryScheduledWorkoutsTool.toolName, "query_scheduled_workouts")
     }
+
+    func testDeleteScheduledWorkoutToolName() {
+        XCTAssertEqual(DeleteScheduledWorkoutTool.toolName, "delete_scheduled_workout")
+    }
+
+    func testDeleteScheduledWorkoutParseIndex() {
+        XCTAssertEqual(DeleteScheduledWorkoutTool.parseIndex(from: ["index": .int(2)]), 2)
+    }
+
+    func testDeleteScheduledWorkoutParseIndexMissing() {
+        XCTAssertNil(DeleteScheduledWorkoutTool.parseIndex(from: [:]))
+    }
 }
