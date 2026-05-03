@@ -6,22 +6,22 @@ import WorkoutKit
 final class QueryToolParsingTests: XCTestCase {
 
     func testQueryWorkoutsDefaultDays() {
-        let days = QueryWorkoutsTool.parseDays(from: [:])
+        let days = parseDays(from: [:])
         XCTAssertEqual(days, 7)
     }
 
     func testQueryWorkoutsCustomDays() {
-        let days = QueryWorkoutsTool.parseDays(from: ["days": .int(14)])
+        let days = parseDays(from: ["days": .int(14)])
         XCTAssertEqual(days, 14)
     }
 
     func testQueryActivitySummaryDefaultDays() {
-        let days = QueryActivitySummaryTool.parseDays(from: [:])
+        let days = parseDays(from: [:])
         XCTAssertEqual(days, 7)
     }
 
     func testQueryRestingHeartRateDefaultDays() {
-        let days = QueryRestingHeartRateTool.parseDays(from: [:])
+        let days = parseDays(from: [:])
         XCTAssertEqual(days, 7)
     }
 
