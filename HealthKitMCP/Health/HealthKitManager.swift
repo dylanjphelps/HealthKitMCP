@@ -314,9 +314,9 @@ private func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
 }
 
 private func intervalResults(from workout: HKWorkout) -> [IntervalResult]? {
-    let hrUnit = HKUnit(from: "count/min")
-    let activities = workout.workoutActivities
-    if !activities.isEmpty {
+    let activities = workout.workoutActivities.filter { $0.duration > 0 }
+    guard activities.isEmpty else {
+        let hrUnit = HKUnit(from: "count/min")
         return activities.enumerated().map { index, activity in
             let duration = activity.duration
             let dist = activity.statistics(for: HKQuantityType(.distanceWalkingRunning))?
