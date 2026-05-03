@@ -45,7 +45,10 @@ actor HealthKitManager {
     func queryWorkouts(days: Int) async throws -> [WorkoutResult] {
         let end = Date()
         let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            HKQuery.predicateForSamples(withStart: start, end: end),
+            HKQuery.predicateForWorkouts(with: .running)
+        ])
         let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
         let store = self.store
 
@@ -59,27 +62,23 @@ actor HealthKitManager {
                 if let error { continuation.resume(throwing: error); return }
                 let iso = ISO8601DateFormatter()
                 let hrUnit = HKUnit(from: "count/min")
-                let results = (samples as? [HKWorkout] ?? [])
-                    .filter { $0.workoutActivityType == .running }
-                    .map { w -> WorkoutResult in
+                let results = (samples as? [HKWorkout] ?? []).map { w -> WorkoutResult in
                         let distMiles = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?
                             .sumQuantity()?.doubleValue(for: .mile()) ?? 0
                         let pace = distMiles > 0 ? w.duration / distMiles : 0
                         let cal = w.statistics(for: HKQuantityType(.activeEnergyBurned))?
                             .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
-                        let hr = w.statistics(for: HKQuantityType(.heartRate))?
-                            .averageQuantity()?.doubleValue(for: hrUnit)
-                        let maxHR = w.statistics(for: HKQuantityType(.heartRate))?
-                            .maximumQuantity()?.doubleValue(for: hrUnit)
+                        let hrStats = w.statistics(for: HKQuantityType(.heartRate))
+                        let hr = hrStats?.averageQuantity()?.doubleValue(for: hrUnit)
+                        let maxHR = hrStats?.maximumQuantity()?.doubleValue(for: hrUnit)
                         let elevUp = (w.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?
                             .doubleValue(for: .foot())
                         let elevDown = (w.metadata?[HKMetadataKeyElevationDescended] as? HKQuantity)?
                             .doubleValue(for: .foot())
                         let isIndoor = w.metadata?[HKMetadataKeyIndoorWorkout] as? Bool
-                        let avgPower = w.statistics(for: HKQuantityType(.runningPower))?
-                            .averageQuantity()?.doubleValue(for: .watt())
-                        let maxPower = w.statistics(for: HKQuantityType(.runningPower))?
-                            .maximumQuantity()?.doubleValue(for: .watt())
+                        let powerStats = w.statistics(for: HKQuantityType(.runningPower))
+                        let avgPower = powerStats?.averageQuantity()?.doubleValue(for: .watt())
+                        let maxPower = powerStats?.maximumQuantity()?.doubleValue(for: .watt())
                         let steps = w.statistics(for: HKQuantityType(.stepCount))?
                             .sumQuantity()?.doubleValue(for: .count())
                         let cadence = steps.map { $0 / w.duration * 60 }
@@ -94,8 +93,8 @@ actor HealthKitManager {
                             duration_minutes: w.duration / 60,
                             distance_miles: distMiles,
                             pace_sec_per_mile: pace,
-                            avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? Optional($0) : nil },
-                            max_heart_rate_bpm: maxHR.flatMap { $0 > 0 ? Optional($0) : nil },
+                            avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? $0 : nil },
+                            max_heart_rate_bpm: maxHR.flatMap { $0 > 0 ? $0 : nil },
                             active_calories: cal,
                             elevation_ascended_feet: elevUp,
                             elevation_descended_feet: elevDown,

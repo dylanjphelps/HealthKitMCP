@@ -13,6 +13,7 @@
 		1E78FB65A855CF8E21B43A2C /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0F9B60D5839D632FF20383 /* App.swift */; };
 		2C0D6CB5D84C36872A57106D /* DeleteScheduledWorkoutTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5688051CBA5762A95C17A1CB /* DeleteScheduledWorkoutTool.swift */; };
 		3F84C774696231DE4A25594B /* QueryScheduledWorkoutsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5724F458BB4B888722BA05 /* QueryScheduledWorkoutsTool.swift */; };
+		4C1E67CA66DA8C50AE0839AD /* ToolHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */; };
 		51A30045C94FCFFE42FB3A00 /* QueryWorkoutsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECD30511D79B99814661EA9 /* QueryWorkoutsTool.swift */; };
 		54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE4495175C870FC90B419F /* Models.swift */; };
 		54EA026903896CFA197F24A5 /* QueryRestingHeartRateTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3052A2FCB100215D06C748B3 /* QueryRestingHeartRateTool.swift */; };
@@ -49,9 +50,10 @@
 		65999B87C71D2C185970863A /* HealthKitMCP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthKitMCP.entitlements; sourceTree = "<group>"; };
 		6AD29E322CC8457635169049 /* HTTPParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPParserTests.swift; sourceTree = "<group>"; };
 		6FDE4495175C870FC90B419F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7064B4297B3A50657303AD1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8C5FA432DE27EF3274A1B0E6 /* HTTPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPServer.swift; sourceTree = "<group>"; };
+		93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolHelpers.swift; sourceTree = "<group>"; };
 		A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryVO2MaxTool.swift; sourceTree = "<group>"; };
 		A55533F904A8BB5854889040 /* QueryToolParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryToolParsingTests.swift; sourceTree = "<group>"; };
 		A6B350F6E313487F40E099E9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 				A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */,
 				CECD30511D79B99814661EA9 /* QueryWorkoutsTool.swift */,
 				BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */,
+				93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -280,6 +283,7 @@
 				51A30045C94FCFFE42FB3A00 /* QueryWorkoutsTool.swift in Sources */,
 				1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */,
 				CE523664A9C21A5C3A830FFE /* Server.swift in Sources */,
+				4C1E67CA66DA8C50AE0839AD /* ToolHelpers.swift in Sources */,
 				C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -384,7 +388,6 @@
 				CODE_SIGN_ENTITLEMENTS = HealthKitMCP/HealthKitMCP.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DDBV754U66;
 				INFOPLIST_FILE = HealthKitMCP/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -424,7 +427,6 @@
 				CODE_SIGN_ENTITLEMENTS = HealthKitMCP/HealthKitMCP.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DDBV754U66;
 				INFOPLIST_FILE = HealthKitMCP/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (

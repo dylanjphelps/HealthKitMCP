@@ -5,7 +5,7 @@ import Foundation
 // MARK: - Step and Block specs
 
 struct StepSpec {
-    let goalType: String      // "time" | "distance"
+    let goalType: String
     let goalValue: Double     // minutes if time, miles if distance
     let targetPaceSecPerMile: Double?
     let targetHeartRateBpm: Double?
@@ -127,17 +127,23 @@ actor WorkoutKitManager {
 
     // MARK: - Scheduling
 
-    func schedule(_ workout: CustomWorkout, for date: Date) async throws {
+    private func authorizedScheduler() async throws -> WorkoutScheduler {
         let scheduler = WorkoutScheduler.shared
-        let state = await scheduler.authorizationState
-        if state == .notDetermined {
-            let granted = await scheduler.requestAuthorization()
-            guard granted == .authorized else {
+        switch await scheduler.authorizationState {
+        case .notDetermined:
+            guard await scheduler.requestAuthorization() == .authorized else {
                 throw WorkoutError.authorizationDenied
             }
-        } else if state == .denied {
+        case .denied:
             throw WorkoutError.authorizationDenied
+        default:
+            break
         }
+        return scheduler
+    }
+
+    func schedule(_ workout: CustomWorkout, for date: Date) async throws {
+        let scheduler = try await authorizedScheduler()
         var components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         components.calendar = Calendar.current
         let plan = WorkoutPlan(.custom(workout))
@@ -145,14 +151,7 @@ actor WorkoutKitManager {
     }
 
     func queryScheduled() async throws -> [ScheduledWorkoutResult] {
-        let scheduler = WorkoutScheduler.shared
-        let state = await scheduler.authorizationState
-        if state == .notDetermined {
-            let granted = await scheduler.requestAuthorization()
-            guard granted == .authorized else { throw WorkoutError.authorizationDenied }
-        } else if state == .denied {
-            throw WorkoutError.authorizationDenied
-        }
+        let scheduler = try await authorizedScheduler()
         let plans = await scheduler.scheduledWorkouts
         return plans.enumerated().map { index, scheduled in
             let (title, type) = workoutInfo(from: scheduled.plan)
@@ -178,14 +177,7 @@ actor WorkoutKitManager {
     }
 
     func deleteScheduled(at index: Int) async throws -> ScheduledWorkoutResult {
-        let scheduler = WorkoutScheduler.shared
-        let state = await scheduler.authorizationState
-        if state == .notDetermined {
-            let granted = await scheduler.requestAuthorization()
-            guard granted == .authorized else { throw WorkoutError.authorizationDenied }
-        } else if state == .denied {
-            throw WorkoutError.authorizationDenied
-        }
+        let scheduler = try await authorizedScheduler()
         let plans = await scheduler.scheduledWorkouts
         guard index >= 0 && index < plans.count else {
             throw WorkoutError.invalidIndex("No scheduled workout at index \(index) (found \(plans.count)).")

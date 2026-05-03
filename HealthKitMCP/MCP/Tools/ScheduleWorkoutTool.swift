@@ -4,7 +4,75 @@ import MCP
 import WorkoutKit
 
 enum ScheduleWorkoutTool {
-    static func handle(args: [String: Value]) async throws -> String {
+    static let toolName = "schedule_workout"
+
+    static let definition = Tool(
+        name: toolName,
+        description: "Schedules a structured running workout directly to Apple Watch via WorkoutKit. Supports warmup, a sequence of segments, and cooldown. Each segment in 'blocks' is either a standalone step (omit 'steps' key — provide goal_type/goal_value/targets directly, with optional purpose defaulting to 'work') or an interval block (include a 'steps' key with repeat_count and an ordered array of steps, each with purpose/goal/targets). Use standalone steps for continuous efforts; use interval blocks for repeated step cycles. For post-set rest between interval groups (rest that does not repeat with each rep), add a standalone recovery block after the interval block.",
+        inputSchema: .object([
+            "type": .string("object"),
+            "properties": .object([
+                "title": .object(["type": .string("string"), "description": .string("Workout name shown on Apple Watch.")]),
+                "warmup": .object([
+                    "type": .string("object"),
+                    "description": .string("Optional. Omit unless the user explicitly requests a warmup. Do not add one by default."),
+                    "properties": .object([
+                        "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
+                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                        "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance. Omit for open.")]),
+                        "target_heart_rate_bpm": .object(["type": .string("number")]),
+                        "target_pace_seconds_per_mile": .object(["type": .string("number")])
+                    ])
+                ]),
+                "blocks": .object([
+                    "type": .string("array"),
+                    "description": .string("Sequence of segments between warmup and cooldown. Each item is either a standalone step (goal_type/goal_value/targets, no 'steps' key) or an interval block ('steps' key required, with repeat_count and a steps array)."),
+                    "items": .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "repeat_count": .object(["type": .string("number"), "description": .string("Interval blocks only. Repetitions (default 1).")]),
+                            "purpose": .object(["type": .string("string"), "enum": .array([.string("work"), .string("recovery")]), "description": .string("Standalone steps only. Defaults to work.")]),
+                            "display_name": .object(["type": .string("string"), "description": .string("Standalone steps only. Custom name shown for this step in the Fitness app.")]),
+                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")]), "description": .string("Standalone steps only.")]),
+                            "goal_value": .object(["type": .string("number"), "description": .string("Standalone steps only. Minutes if time, miles if distance. Omit for open.")]),
+                            "target_heart_rate_bpm": .object(["type": .string("number"), "description": .string("Standalone steps only.")]),
+                            "target_pace_seconds_per_mile": .object(["type": .string("number"), "description": .string("Standalone steps only.")]),
+                            "steps": .object([
+                                "type": .string("array"),
+                                "description": .string("Interval blocks only. Ordered list of steps per repetition."),
+                                "items": .object([
+                                    "type": .string("object"),
+                                    "properties": .object([
+                                        "purpose": .object(["type": .string("string"), "enum": .array([.string("work"), .string("recovery")])]),
+                                        "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
+                                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                                        "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance. Omit for open.")]),
+                                        "target_heart_rate_bpm": .object(["type": .string("number")]),
+                                        "target_pace_seconds_per_mile": .object(["type": .string("number")])
+                                    ])
+                                ])
+                            ])
+                        ])
+                    ])
+                ]),
+                "cooldown": .object([
+                    "type": .string("object"),
+                    "description": .string("Optional. Omit unless the user explicitly requests a cooldown. Do not add one by default."),
+                    "properties": .object([
+                        "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
+                        "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                        "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance. Omit for open.")]),
+                        "target_heart_rate_bpm": .object(["type": .string("number")]),
+                        "target_pace_seconds_per_mile": .object(["type": .string("number")])
+                    ])
+                ]),
+                "scheduled_date": .object(["type": .string("string"), "description": .string("YYYY-MM-DD. Defaults to today.")])
+            ]),
+            "required": .array([.string("title"), .string("blocks")])
+        ])
+    )
+
+    static func handle(args: [String: Value], manager: WorkoutKitManager) async throws -> String {
         let title = args["title"]?.stringValue ?? ""
         guard !title.isEmpty else { return "Missing required parameter: title" }
 
@@ -22,7 +90,6 @@ enum ScheduleWorkoutTool {
             return "blocks array contained no valid block objects"
         }
 
-        let manager = WorkoutKitManager()
         let (workout, description) = try await manager.buildCustom(
             title: title,
             warmup: warmup,
@@ -82,16 +149,18 @@ enum ScheduleWorkoutTool {
         return BlockSpec(repeatCount: repeatCount, steps: steps)
     }
 
-    private static func isoToday() -> String {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withFullDate]
-        return f.string(from: Date())
-    }
-
-    private static func parseDate(from iso: String) -> Date {
+    private static let dateFormatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withFullDate]
         f.timeZone = .current
-        return f.date(from: iso) ?? Date()
+        return f
+    }()
+
+    private static func isoToday() -> String {
+        dateFormatter.string(from: Date())
+    }
+
+    private static func parseDate(from iso: String) -> Date {
+        dateFormatter.date(from: iso) ?? Date()
     }
 }

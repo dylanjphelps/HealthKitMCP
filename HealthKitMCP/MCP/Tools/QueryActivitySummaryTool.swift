@@ -19,10 +19,6 @@ enum QueryActivitySummaryTool {
         ])
     )
 
-    static func parseDays(from args: [String: Value]) -> Int {
-        args["days"]?.intValue ?? 7
-    }
-
     static func handle(args: [String: Value], manager: HealthKitManager) async throws -> String {
         let days = parseDays(from: args)
         let results = try await manager.queryActivitySummary(days: days)
