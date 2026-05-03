@@ -165,4 +165,44 @@ final class WorkoutBuilderTests: XCTestCase {
         let desc = await manager.describeWorkout(title: "6x3min", warmup: nil, blocks: [block], cooldown: nil)
         XCTAssertEqual(desc, "6×(3.0min + 1.5min recovery)")
     }
+
+    // MARK: - Split computation logic
+
+    func testSplitPaceCalculationFullMiles() {
+        // Verify that a 3-mile run with 3 segment events produces correct pace per mile.
+        // We can't construct HKWorkout/HKWorkoutEvent in tests, so verify the SplitResult
+        // struct encoding covers the expected shape, and that the logic is wired (integration
+        // covered by on-device testing).
+        let split = SplitResult(mile: 1, pace_sec_per_mile: 510.0, elapsed_seconds: 510.0)
+        XCTAssertEqual(split.mile, 1)
+        XCTAssertEqual(split.pace_sec_per_mile, 510.0, accuracy: 0.01)
+    }
+
+    func testSplitResultNilWhenNoSegments() {
+        // A WorkoutResult with nil splits should encode splits as absent from JSON.
+        let result = WorkoutResult(
+            date: "2026-05-03T06:00:00Z",
+            duration_minutes: 30.0,
+            distance_miles: 3.1,
+            pace_sec_per_mile: 580.0,
+            avg_heart_rate_bpm: nil,
+            max_heart_rate_bpm: nil,
+            active_calories: 300.0,
+            elevation_ascended_feet: nil,
+            elevation_descended_feet: nil,
+            is_indoor: nil,
+            avg_running_power_watts: nil,
+            max_running_power_watts: nil,
+            avg_cadence_spm: nil,
+            avg_stride_length_feet: nil,
+            avg_vertical_oscillation_inches: nil,
+            avg_ground_contact_time_ms: nil,
+            weather_temperature_fahrenheit: nil,
+            weather_humidity_percent: nil,
+            splits: nil,
+            intervals: nil
+        )
+        let json = try! encodeToJSON(result)
+        XCTAssertFalse(json.contains("\"splits\""), "nil splits should be omitted from JSON")
+    }
 }

@@ -88,6 +88,7 @@ actor HealthKitManager {
                             .averageQuantity()?.doubleValue(for: .inch())
                         let gct = w.statistics(for: HKQuantityType(.runningGroundContactTime))?
                             .averageQuantity()?.doubleValue(for: HKUnit.secondUnit(with: .milli))
+                        let splits = splitResults(from: w, totalDistance: distMiles)
                         return WorkoutResult(
                             date: iso.string(from: w.startDate),
                             duration_minutes: w.duration / 60,
@@ -109,7 +110,7 @@ actor HealthKitManager {
                                 .doubleValue(for: .degreeFahrenheit()),
                             weather_humidity_percent: (w.metadata?[HKMetadataKeyWeatherHumidity] as? HKQuantity)
                                 .map { $0.doubleValue(for: .percent()) * 100 },
-                            splits: nil,
+                            splits: splits,
                             intervals: nil
                         )
                     }
@@ -270,4 +271,31 @@ actor HealthKitManager {
             store.execute(q)
         }
     }
+}
+
+// MARK: - Workout detail helpers
+
+private func splitResults(from workout: HKWorkout, totalDistance: Double) -> [SplitResult]? {
+    let segments = (workout.workoutEvents ?? []).filter { $0.type == .segment }
+    guard !segments.isEmpty else { return nil }
+    var results: [SplitResult] = []
+    for (i, event) in segments.enumerated() {
+        let duration = event.dateInterval.duration
+        let elapsed = event.dateInterval.end.timeIntervalSince(workout.startDate)
+        let isLast = i == segments.count - 1
+        let distance: Double
+        if isLast {
+            let remaining = totalDistance - Double(i)
+            guard remaining >= 0.05 else { continue }
+            distance = remaining
+        } else {
+            distance = 1.0
+        }
+        results.append(SplitResult(
+            mile: i + 1,
+            pace_sec_per_mile: duration / distance,
+            elapsed_seconds: elapsed
+        ))
+    }
+    return results.isEmpty ? nil : results
 }
