@@ -194,4 +194,44 @@ final class WorkoutBuilderTests: XCTestCase {
         let json = try encodeToJSON(result)
         XCTAssertFalse(json.contains("\"splits\""), "nil splits should be omitted from JSON")
     }
+
+    func testIntervalResultNilFieldsRoundTrip() throws {
+        let interval = IntervalResult(index: 0, type: "lap", duration_seconds: 240.0,
+                                      distance_miles: nil, pace_sec_per_mile: nil,
+                                      avg_heart_rate_bpm: nil)
+        let json = try encodeToJSON(interval)
+        let decoded = try JSONDecoder().decode(IntervalResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.type, "lap")
+        XCTAssertEqual(decoded.duration_seconds, 240.0)
+        XCTAssertNil(decoded.distance_miles)
+        XCTAssertNil(decoded.pace_sec_per_mile)
+        XCTAssertNil(decoded.avg_heart_rate_bpm)
+    }
+
+    func testWorkoutResultNilIntervalsOmittedFromJSON() throws {
+        let result = WorkoutResult(
+            date: "2026-05-03T06:00:00Z",
+            duration_minutes: 30.0,
+            distance_miles: 3.1,
+            pace_sec_per_mile: 580.0,
+            avg_heart_rate_bpm: nil,
+            max_heart_rate_bpm: nil,
+            active_calories: 300.0,
+            elevation_ascended_feet: nil,
+            elevation_descended_feet: nil,
+            is_indoor: nil,
+            avg_running_power_watts: nil,
+            max_running_power_watts: nil,
+            avg_cadence_spm: nil,
+            avg_stride_length_feet: nil,
+            avg_vertical_oscillation_inches: nil,
+            avg_ground_contact_time_ms: nil,
+            weather_temperature_fahrenheit: nil,
+            weather_humidity_percent: nil,
+            splits: nil,
+            intervals: nil
+        )
+        let json = try encodeToJSON(result)
+        XCTAssertFalse(json.contains("\"intervals\""), "nil intervals should be omitted from JSON")
+    }
 }

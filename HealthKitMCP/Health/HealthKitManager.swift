@@ -89,6 +89,7 @@ actor HealthKitManager {
                         let gct = w.statistics(for: HKQuantityType(.runningGroundContactTime))?
                             .averageQuantity()?.doubleValue(for: HKUnit.secondUnit(with: .milli))
                         let splits = splitResults(from: w, totalDistance: distMiles)
+                        let intervals = intervalResults(from: w)
                         return WorkoutResult(
                             date: iso.string(from: w.startDate),
                             duration_minutes: w.duration / 60,
@@ -111,7 +112,7 @@ actor HealthKitManager {
                             weather_humidity_percent: (w.metadata?[HKMetadataKeyWeatherHumidity] as? HKQuantity)
                                 .map { $0.doubleValue(for: .percent()) * 100 },
                             splits: splits,
-                            intervals: nil
+                            intervals: intervals
                         )
                     }
                 continuation.resume(returning: results)
@@ -300,4 +301,49 @@ private func splitResults(from workout: HKWorkout, totalDistance: Double) -> [Sp
         ))
     }
     return results.isEmpty ? nil : results
+}
+
+private func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
+    switch type {
+    case .cooldown: return "cooldown"
+    case .preparationAndRecovery: return "recovery"
+    case .running: return "run"
+    case .walking: return "walk"
+    default: return "segment"
+    }
+}
+
+private func intervalResults(from workout: HKWorkout) -> [IntervalResult]? {
+    let hrUnit = HKUnit(from: "count/min")
+    let activities = workout.workoutActivities
+    if !activities.isEmpty {
+        return activities.enumerated().map { index, activity in
+            let duration = activity.duration
+            let dist = activity.statistics(for: HKQuantityType(.distanceWalkingRunning))?
+                .sumQuantity()?.doubleValue(for: .mile())
+            let pace: Double? = dist.flatMap { d in d > 0 ? duration / d : nil }
+            let hr = activity.statistics(for: HKQuantityType(.heartRate))?
+                .averageQuantity()?.doubleValue(for: hrUnit)
+            return IntervalResult(
+                index: index,
+                type: activityTypeLabel(activity.workoutConfiguration.activityType),
+                duration_seconds: duration,
+                distance_miles: dist,
+                pace_sec_per_mile: pace,
+                avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? $0 : nil }
+            )
+        }
+    }
+    let laps = (workout.workoutEvents ?? []).filter { $0.type == .lap }
+    guard !laps.isEmpty else { return nil }
+    return laps.enumerated().map { index, event in
+        IntervalResult(
+            index: index,
+            type: "lap",
+            duration_seconds: event.dateInterval.duration,
+            distance_miles: nil,
+            pace_sec_per_mile: nil,
+            avg_heart_rate_bpm: nil
+        )
+    }
 }
