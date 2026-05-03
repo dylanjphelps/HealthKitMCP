@@ -196,12 +196,12 @@ final class WorkoutBuilderTests: XCTestCase {
     }
 
     func testIntervalResultNilFieldsRoundTrip() throws {
-        let interval = IntervalResult(index: 0, type: "lap", duration_seconds: 240.0,
+        let interval = IntervalResult(index: 0, type: "recovery", duration_seconds: 240.0,
                                       distance_miles: nil, pace_sec_per_mile: nil,
                                       avg_heart_rate_bpm: nil)
         let json = try encodeToJSON(interval)
         let decoded = try JSONDecoder().decode(IntervalResult.self, from: Data(json.utf8))
-        XCTAssertEqual(decoded.type, "lap")
+        XCTAssertEqual(decoded.type, "recovery")
         XCTAssertEqual(decoded.duration_seconds, 240.0)
         XCTAssertNil(decoded.distance_miles)
         XCTAssertNil(decoded.pace_sec_per_mile)

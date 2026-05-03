@@ -49,7 +49,7 @@ Keep the app open on your iPhone while using Claude Desktop. Claude will connect
 
 | Tool | Description |
 |------|-------------|
-| `query_workouts` | Running sessions — distance, pace, avg HR, calories |
+| `query_workouts` | Running sessions — distance, pace, HR, calories, elevation, power, cadence, per-mile splits, and per-interval breakdown for WorkoutKit-planned runs |
 | `query_activity_summary` | Daily steps, active calories, exercise minutes |
 | `query_resting_heart_rate` | Daily resting HR (avg, min, max) |
 | `query_vo2max` | Most recent VO2 max estimate |

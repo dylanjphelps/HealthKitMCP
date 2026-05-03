@@ -315,35 +315,22 @@ func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
 
 private func intervalResults(from workout: HKWorkout) -> [IntervalResult]? {
     let activities = workout.workoutActivities.filter { $0.duration > 0 }
-    if !activities.isEmpty {
-        let hrUnit = HKUnit(from: "count/min")
-        return activities.enumerated().map { index, activity in
-            let duration = activity.duration
-            let dist = activity.statistics(for: HKQuantityType(.distanceWalkingRunning))?
-                .sumQuantity()?.doubleValue(for: .mile())
-            let pace: Double? = dist.flatMap { d in d > 0 ? duration / d : nil }
-            let hr = activity.statistics(for: HKQuantityType(.heartRate))?
-                .averageQuantity()?.doubleValue(for: hrUnit)
-            return IntervalResult(
-                index: index,
-                type: activityTypeLabel(activity.workoutConfiguration.activityType),
-                duration_seconds: duration,
-                distance_miles: dist,
-                pace_sec_per_mile: pace,
-                avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? $0 : nil }
-            )
-        }
-    }
-    let laps = (workout.workoutEvents ?? []).filter { $0.type == .lap }
-    guard !laps.isEmpty else { return nil }
-    return laps.enumerated().map { index, event in
-        IntervalResult(
+    guard !activities.isEmpty else { return nil }
+    let hrUnit = HKUnit(from: "count/min")
+    return activities.enumerated().map { index, activity in
+        let duration = activity.duration
+        let dist = activity.statistics(for: HKQuantityType(.distanceWalkingRunning))?
+            .sumQuantity()?.doubleValue(for: .mile())
+        let pace: Double? = dist.flatMap { d in d > 0 ? duration / d : nil }
+        let hr = activity.statistics(for: HKQuantityType(.heartRate))?
+            .averageQuantity()?.doubleValue(for: hrUnit)
+        return IntervalResult(
             index: index,
-            type: "lap",
-            duration_seconds: event.dateInterval.duration,
-            distance_miles: nil,
-            pace_sec_per_mile: nil,
-            avg_heart_rate_bpm: nil
+            type: activityTypeLabel(activity.workoutConfiguration.activityType),
+            duration_seconds: duration,
+            distance_miles: dist,
+            pace_sec_per_mile: pace,
+            avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? $0 : nil }
         )
     }
 }
