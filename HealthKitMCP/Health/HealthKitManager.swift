@@ -276,15 +276,17 @@ actor HealthKitManager {
 // MARK: - Workout detail helpers
 
 private func splitResults(from workout: HKWorkout, totalDistance: Double) -> [SplitResult]? {
+    guard totalDistance > 0 else { return nil }
     let segments = (workout.workoutEvents ?? []).filter { $0.type == .segment }
     guard !segments.isEmpty else { return nil }
+    // HealthKit auto-lap emits one .segment event per completed mile, so segment index i
+    // corresponds to miles [i, i+1). The last segment covers the fractional remainder.
     var results: [SplitResult] = []
     for (i, event) in segments.enumerated() {
         let duration = event.dateInterval.duration
         let elapsed = event.dateInterval.end.timeIntervalSince(workout.startDate)
-        let isLast = i == segments.count - 1
         let distance: Double
-        if isLast {
+        if i == segments.count - 1 {
             let remaining = totalDistance - Double(i)
             guard remaining >= 0.05 else { continue }
             distance = remaining
