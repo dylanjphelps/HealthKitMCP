@@ -108,11 +108,13 @@ actor HealthKitMCPServer {
                     "title": .object(["type": .string("string"), "description": .string("Workout name shown on Apple Watch.")]),
                     "warmup": .object([
                         "type": .string("object"),
+                        "description": .string("Optional. Omit unless the user explicitly requests a warmup. Do not add one by default."),
                         "properties": .object([
                             "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
-                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
-                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance.")]),
-                            "target_heart_rate_bpm": .object(["type": .string("number")])
+                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance. Omit for open.")]),
+                            "target_heart_rate_bpm": .object(["type": .string("number")]),
+                            "target_pace_seconds_per_mile": .object(["type": .string("number")])
                         ])
                     ]),
                     "blocks": .object([
@@ -148,11 +150,13 @@ actor HealthKitMCPServer {
                     ]),
                     "cooldown": .object([
                         "type": .string("object"),
+                        "description": .string("Optional. Omit unless the user explicitly requests a cooldown. Do not add one by default."),
                         "properties": .object([
                             "display_name": .object(["type": .string("string"), "description": .string("Custom name shown for this step in the Fitness app.")]),
-                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance")])]),
-                            "goal_value": .object(["type": .string("number")]),
-                            "target_heart_rate_bpm": .object(["type": .string("number")])
+                            "goal_type": .object(["type": .string("string"), "enum": .array([.string("time"), .string("distance"), .string("open")])]),
+                            "goal_value": .object(["type": .string("number"), "description": .string("Minutes if time, miles if distance. Omit for open.")]),
+                            "target_heart_rate_bpm": .object(["type": .string("number")]),
+                            "target_pace_seconds_per_mile": .object(["type": .string("number")])
                         ])
                     ]),
                     "scheduled_date": .object(["type": .string("string"), "description": .string("YYYY-MM-DD. Defaults to today.")])
