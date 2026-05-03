@@ -234,4 +234,14 @@ final class WorkoutBuilderTests: XCTestCase {
         let json = try encodeToJSON(result)
         XCTAssertFalse(json.contains("\"intervals\""), "nil intervals should be omitted from JSON")
     }
+
+    // MARK: - Interval type label
+
+    func testActivityTypeLabelMapsAllSpecifiedCases() {
+        XCTAssertEqual(activityTypeLabel(.cooldown), "cooldown")
+        XCTAssertEqual(activityTypeLabel(.preparationAndRecovery), "recovery")
+        XCTAssertEqual(activityTypeLabel(.running), "run")
+        XCTAssertEqual(activityTypeLabel(.walking), "walk")
+        XCTAssertEqual(activityTypeLabel(.cycling), "segment")
+    }
 }

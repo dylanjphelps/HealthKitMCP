@@ -303,7 +303,7 @@ private func splitResults(from workout: HKWorkout, totalDistance: Double) -> [Sp
     return results.isEmpty ? nil : results
 }
 
-private func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
+func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
     switch type {
     case .cooldown: return "cooldown"
     case .preparationAndRecovery: return "recovery"
@@ -315,7 +315,7 @@ private func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
 
 private func intervalResults(from workout: HKWorkout) -> [IntervalResult]? {
     let activities = workout.workoutActivities.filter { $0.duration > 0 }
-    guard activities.isEmpty else {
+    if !activities.isEmpty {
         let hrUnit = HKUnit(from: "count/min")
         return activities.enumerated().map { index, activity in
             let duration = activity.duration

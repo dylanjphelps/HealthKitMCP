@@ -6,7 +6,7 @@ enum QueryWorkoutsTool {
 
     static let definition = Tool(
         name: toolName,
-        description: "Returns running sessions for the last N days. Includes date, duration, distance, pace, average heart rate, and calories.",
+        description: "Returns running sessions for the last N days. Each session includes date, duration, distance, pace, heart rate, calories, elevation, power, and cadence. Also includes per-mile split pacing (splits) and per-interval breakdown for structured or lapped workouts (intervals). Splits assume mile auto-lap; intervals are richest for WorkoutKit-planned sessions.",
         inputSchema: .object([
             "type": .string("object"),
             "properties": .object([
