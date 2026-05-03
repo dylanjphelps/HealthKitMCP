@@ -25,7 +25,9 @@ final class WorkoutBuilderTests: XCTestCase {
             avg_vertical_oscillation_inches: nil,
             avg_ground_contact_time_ms: nil,
             weather_temperature_fahrenheit: nil,
-            weather_humidity_percent: nil
+            weather_humidity_percent: nil,
+            splits: nil,
+            intervals: nil
         )
         let json = try encodeToJSON(original)
         let decoded = try JSONDecoder().decode(WorkoutResult.self, from: Data(json.utf8))
@@ -53,7 +55,9 @@ final class WorkoutBuilderTests: XCTestCase {
             avg_vertical_oscillation_inches: nil,
             avg_ground_contact_time_ms: nil,
             weather_temperature_fahrenheit: nil,
-            weather_humidity_percent: nil
+            weather_humidity_percent: nil,
+            splits: nil,
+            intervals: nil
         )
         let json = try encodeToJSON(original)
         let decoded = try JSONDecoder().decode(WorkoutResult.self, from: Data(json.utf8))
@@ -83,6 +87,64 @@ final class WorkoutBuilderTests: XCTestCase {
         XCTAssertEqual(decoded.date, "2026-05-03")
         XCTAssertEqual(decoded.title, "Morning Run")
         XCTAssertEqual(decoded.type, "custom")
+    }
+
+    func testSplitResultRoundTrip() throws {
+        let split = SplitResult(mile: 1, pace_sec_per_mile: 510.0, elapsed_seconds: 510.0)
+        let json = try encodeToJSON(split)
+        let decoded = try JSONDecoder().decode(SplitResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.mile, 1)
+        XCTAssertEqual(decoded.pace_sec_per_mile, 510.0)
+        XCTAssertEqual(decoded.elapsed_seconds, 510.0)
+    }
+
+    func testIntervalResultRoundTrip() throws {
+        let interval = IntervalResult(index: 0, type: "run", duration_seconds: 180.0,
+                                      distance_miles: 0.5, pace_sec_per_mile: 360.0,
+                                      avg_heart_rate_bpm: 165.0)
+        let json = try encodeToJSON(interval)
+        let decoded = try JSONDecoder().decode(IntervalResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.index, 0)
+        XCTAssertEqual(decoded.type, "run")
+        XCTAssertEqual(decoded.duration_seconds, 180.0)
+        XCTAssertEqual(decoded.distance_miles, 0.5)
+        XCTAssertEqual(decoded.pace_sec_per_mile, 360.0)
+        XCTAssertEqual(decoded.avg_heart_rate_bpm, 165.0)
+    }
+
+    func testWorkoutResultWithSplitsAndIntervalsRoundTrip() throws {
+        let split = SplitResult(mile: 1, pace_sec_per_mile: 510.0, elapsed_seconds: 510.0)
+        let interval = IntervalResult(index: 0, type: "run", duration_seconds: 180.0,
+                                      distance_miles: nil, pace_sec_per_mile: nil,
+                                      avg_heart_rate_bpm: nil)
+        let original = WorkoutResult(
+            date: "2026-05-03T06:00:00Z",
+            duration_minutes: 45.0,
+            distance_miles: 5.3,
+            pace_sec_per_mile: 510.0,
+            avg_heart_rate_bpm: nil,
+            max_heart_rate_bpm: nil,
+            active_calories: 500.0,
+            elevation_ascended_feet: nil,
+            elevation_descended_feet: nil,
+            is_indoor: nil,
+            avg_running_power_watts: nil,
+            max_running_power_watts: nil,
+            avg_cadence_spm: nil,
+            avg_stride_length_feet: nil,
+            avg_vertical_oscillation_inches: nil,
+            avg_ground_contact_time_ms: nil,
+            weather_temperature_fahrenheit: nil,
+            weather_humidity_percent: nil,
+            splits: [split],
+            intervals: [interval]
+        )
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(WorkoutResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.splits?.count, 1)
+        XCTAssertEqual(decoded.splits?.first?.mile, 1)
+        XCTAssertEqual(decoded.intervals?.count, 1)
+        XCTAssertEqual(decoded.intervals?.first?.type, "run")
     }
 
     // MARK: - WorkoutKitManager description

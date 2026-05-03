@@ -108,7 +108,9 @@ actor HealthKitManager {
                             weather_temperature_fahrenheit: (w.metadata?[HKMetadataKeyWeatherTemperature] as? HKQuantity)?
                                 .doubleValue(for: .degreeFahrenheit()),
                             weather_humidity_percent: (w.metadata?[HKMetadataKeyWeatherHumidity] as? HKQuantity)
-                                .map { $0.doubleValue(for: .percent()) * 100 }
+                                .map { $0.doubleValue(for: .percent()) * 100 },
+                            splits: nil,
+                            intervals: nil
                         )
                     }
                 continuation.resume(returning: results)

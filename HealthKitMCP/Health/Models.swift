@@ -28,6 +28,23 @@ struct WorkoutResult: Codable {
     let avg_ground_contact_time_ms: Double?
     let weather_temperature_fahrenheit: Double?
     let weather_humidity_percent: Double?
+    let splits: [SplitResult]?
+    let intervals: [IntervalResult]?
+}
+
+struct SplitResult: Codable {
+    let mile: Int
+    let pace_sec_per_mile: Double
+    let elapsed_seconds: Double
+}
+
+struct IntervalResult: Codable {
+    let index: Int
+    let type: String
+    let duration_seconds: Double
+    let distance_miles: Double?
+    let pace_sec_per_mile: Double?
+    let avg_heart_rate_bpm: Double?
 }
 
 struct ActivitySummaryResult: Codable {
