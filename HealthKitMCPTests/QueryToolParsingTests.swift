@@ -25,6 +25,16 @@ final class QueryToolParsingTests: XCTestCase {
         XCTAssertEqual(days, 7)
     }
 
+    func testBodyMassDefaultDays() {
+        let days = parseDays(from: [:], default: 30)
+        XCTAssertEqual(days, 30)
+    }
+
+    func testParseDaysExplicitOverridesDefault() {
+        let days = parseDays(from: ["days": .int(14)], default: 30)
+        XCTAssertEqual(days, 14)
+    }
+
     func testVO2MaxToolNameIsCorrect() {
         XCTAssertEqual(QueryVO2MaxTool.toolName, "query_vo2max")
     }

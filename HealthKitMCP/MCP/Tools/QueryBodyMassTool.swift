@@ -20,7 +20,7 @@ enum QueryBodyMassTool {
     )
 
     static func handle(args: [String: Value], manager: HealthKitManager) async throws -> String {
-        let days = args["days"]?.intValue ?? 30
+        let days = parseDays(from: args, default: 30)
         let results = try await manager.queryBodyMass(days: days)
         return try encodeToJSON(results)
     }

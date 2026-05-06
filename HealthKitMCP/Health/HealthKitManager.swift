@@ -255,7 +255,7 @@ actor HealthKitManager {
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
-        let unit = HKUnit(from: "ms")
+        let unit = HKUnit.secondUnit(with: .milli)
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
         let store = self.store
@@ -294,7 +294,7 @@ actor HealthKitManager {
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
-        let kgUnit = HKUnit.gramUnit(with: .kilo)
+        let lbsUnit = HKUnit.pound()
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
         let store = self.store
@@ -312,8 +312,7 @@ actor HealthKitManager {
                 var data: [BodyMassResult] = []
                 results?.enumerateStatistics(from: start, to: end) { stats, _ in
                     guard let avg = stats.averageQuantity() else { return }
-                    let kg = avg.doubleValue(for: kgUnit)
-                    let lbs = round(kg * 2.20462 * 10) / 10
+                    let lbs = (avg.doubleValue(for: lbsUnit) * 10).rounded() / 10
                     data.append(BodyMassResult(date: formatter.string(from: stats.startDate), weight_lbs: lbs))
                 }
                 continuation.resume(returning: data)
