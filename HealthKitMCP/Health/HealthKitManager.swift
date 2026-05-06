@@ -391,24 +391,24 @@ func sleepResults(from samples: [HKCategorySample], calendar: Calendar = .curren
             ? calendar.date(byAdding: .day, value: -1, to: startOfDay)!
             : startOfDay
         let minutes = sample.endDate.timeIntervalSince(sample.startDate) / 60.0
-        var e = byDay[day] ?? (0, 0, 0, 0, 0, 0)
+        var entry = byDay[day] ?? (inBed: 0, totalSleep: 0, core: 0, rem: 0, deep: 0, awake: 0)
         switch sample.value {
         case HKCategoryValueSleepAnalysis.inBed.rawValue:
-            e.inBed += minutes
+            entry.inBed += minutes
         case HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
-            e.totalSleep += minutes
+            entry.totalSleep += minutes
         case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
-            e.totalSleep += minutes; e.core += minutes
+            entry.totalSleep += minutes; entry.core += minutes
         case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-            e.totalSleep += minutes; e.rem += minutes
+            entry.totalSleep += minutes; entry.rem += minutes
         case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
-            e.totalSleep += minutes; e.deep += minutes
+            entry.totalSleep += minutes; entry.deep += minutes
         case HKCategoryValueSleepAnalysis.awake.rawValue:
-            e.awake += minutes
+            entry.awake += minutes
         default:
             break
         }
-        byDay[day] = e
+        byDay[day] = entry
     }
 
     let formatter = ISO8601DateFormatter()
@@ -418,16 +418,16 @@ func sleepResults(from samples: [HKCategorySample], calendar: Calendar = .curren
     return byDay
         .filter { $0.value.inBed > 0 || $0.value.totalSleep > 0 }
         .sorted { $0.key < $1.key }
-        .map { day, e in
+        .map { day, entry in
             SleepResult(
                 date: formatter.string(from: day),
-                total_sleep_minutes: e.totalSleep,
-                time_in_bed_minutes: e.inBed,
+                total_sleep_minutes: entry.totalSleep,
+                time_in_bed_minutes: entry.inBed,
                 stages: SleepStagesResult(
-                    awake_minutes: e.awake > 0 ? e.awake : nil,
-                    rem_minutes: e.rem > 0 ? e.rem : nil,
-                    core_minutes: e.core > 0 ? e.core : nil,
-                    deep_minutes: e.deep > 0 ? e.deep : nil
+                    awake_minutes: entry.awake > 0 ? entry.awake : nil,
+                    rem_minutes: entry.rem > 0 ? entry.rem : nil,
+                    core_minutes: entry.core > 0 ? entry.core : nil,
+                    deep_minutes: entry.deep > 0 ? entry.deep : nil
                 )
             )
         }
