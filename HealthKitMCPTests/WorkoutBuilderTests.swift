@@ -503,5 +503,6 @@ final class SleepAggregationTests: XCTestCase {
         XCTAssertNil(results[0].stages.core_minutes)
         XCTAssertNil(results[0].stages.rem_minutes)
         XCTAssertNil(results[0].stages.deep_minutes)
+        XCTAssertNil(results[0].stages.awake_minutes)
     }
 }
