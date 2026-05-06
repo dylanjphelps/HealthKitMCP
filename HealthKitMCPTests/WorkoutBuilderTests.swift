@@ -1,5 +1,6 @@
 import XCTest
 import WorkoutKit
+import HealthKit
 @testable import HealthKitMCP
 
 final class WorkoutBuilderTests: XCTestCase {
@@ -347,5 +348,60 @@ final class WorkoutBuilderTests: XCTestCase {
         XCTAssertEqual(activityTypeLabel(.running), "run")
         XCTAssertEqual(activityTypeLabel(.walking), "walk")
         XCTAssertEqual(activityTypeLabel(.cycling), "segment")
+    }
+
+    // MARK: - HRV models
+
+    func testHRVResultRoundTrip() throws {
+        let original = HRVResult(date: "2026-05-01", avg_ms: 45.2, min_ms: 38.0, max_ms: 52.0)
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(HRVResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.date, "2026-05-01")
+        XCTAssertEqual(decoded.avg_ms, 45.2)
+        XCTAssertEqual(decoded.min_ms, 38.0)
+        XCTAssertEqual(decoded.max_ms, 52.0)
+    }
+
+    func testHRVResultNilFieldsOmittedFromJSON() throws {
+        let original = HRVResult(date: "2026-05-01", avg_ms: 45.2, min_ms: nil, max_ms: nil)
+        let json = try encodeToJSON(original)
+        XCTAssertFalse(json.contains("\"min_ms\""))
+        XCTAssertFalse(json.contains("\"max_ms\""))
+    }
+
+    // MARK: - Sleep models
+
+    func testSleepResultRoundTrip() throws {
+        let stages = SleepStagesResult(awake_minutes: 12.0, rem_minutes: 90.0, core_minutes: 150.0, deep_minutes: 60.0)
+        let original = SleepResult(date: "2026-05-01", total_sleep_minutes: 300.0, time_in_bed_minutes: 420.0, stages: stages)
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(SleepResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.date, "2026-05-01")
+        XCTAssertEqual(decoded.total_sleep_minutes, 300.0)
+        XCTAssertEqual(decoded.time_in_bed_minutes, 420.0)
+        XCTAssertEqual(decoded.stages.rem_minutes, 90.0)
+        XCTAssertEqual(decoded.stages.core_minutes, 150.0)
+        XCTAssertEqual(decoded.stages.deep_minutes, 60.0)
+        XCTAssertEqual(decoded.stages.awake_minutes, 12.0)
+    }
+
+    func testSleepStagesNilFieldsOmittedFromJSON() throws {
+        let stages = SleepStagesResult(awake_minutes: nil, rem_minutes: nil, core_minutes: nil, deep_minutes: nil)
+        let original = SleepResult(date: "2026-05-01", total_sleep_minutes: 420.0, time_in_bed_minutes: 480.0, stages: stages)
+        let json = try encodeToJSON(original)
+        XCTAssertFalse(json.contains("\"awake_minutes\""))
+        XCTAssertFalse(json.contains("\"rem_minutes\""))
+        XCTAssertFalse(json.contains("\"core_minutes\""))
+        XCTAssertFalse(json.contains("\"deep_minutes\""))
+    }
+
+    // MARK: - Body mass models
+
+    func testBodyMassResultRoundTrip() throws {
+        let original = BodyMassResult(date: "2026-05-01", weight_lbs: 165.3)
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(BodyMassResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.date, "2026-05-01")
+        XCTAssertEqual(decoded.weight_lbs, 165.3)
     }
 }

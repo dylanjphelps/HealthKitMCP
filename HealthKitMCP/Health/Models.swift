@@ -102,3 +102,29 @@ struct ScheduledWorkoutResult: Codable {
         self.cooldown = cooldown
     }
 }
+
+struct HRVResult: Codable {
+    let date: String
+    let avg_ms: Double
+    let min_ms: Double?
+    let max_ms: Double?
+}
+
+struct SleepStagesResult: Codable {
+    let awake_minutes: Double?
+    let rem_minutes: Double?
+    let core_minutes: Double?
+    let deep_minutes: Double?
+}
+
+struct SleepResult: Codable {
+    let date: String
+    let total_sleep_minutes: Double
+    let time_in_bed_minutes: Double
+    let stages: SleepStagesResult
+}
+
+struct BodyMassResult: Codable {
+    let date: String
+    let weight_lbs: Double
+}
