@@ -10,6 +10,7 @@ actor HealthKitManager {
     private static let readSampleTypes: Set<HKSampleType> = [
         HKObjectType.workoutType(),
         HKQuantityType(.restingHeartRate),
+        HKQuantityType(.heartRateVariabilitySDNN),
         HKQuantityType(.vo2Max),
         HKQuantityType(.stepCount),
         HKQuantityType(.activeEnergyBurned),
@@ -236,6 +237,45 @@ actor HealthKitManager {
                         avg_bpm: avg.doubleValue(for: unit),
                         min_bpm: stats.minimumQuantity()?.doubleValue(for: unit),
                         max_bpm: stats.maximumQuantity()?.doubleValue(for: unit)
+                    ))
+                }
+                continuation.resume(returning: data)
+            }
+            store.execute(q)
+        }
+    }
+
+    // MARK: - HRV
+
+    func queryHRV(days: Int) async throws -> [HRVResult] {
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let interval = DateComponents(day: 1)
+        let anchor = Calendar.current.startOfDay(for: start)
+        let unit = HKUnit(from: "ms")
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate]
+        let store = self.store
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let q = HKStatisticsCollectionQuery(
+                quantityType: HKQuantityType(.heartRateVariabilitySDNN),
+                quantitySamplePredicate: predicate,
+                options: [.discreteAverage, .discreteMin, .discreteMax],
+                anchorDate: anchor,
+                intervalComponents: interval
+            )
+            q.initialResultsHandler = { _, results, error in
+                if let error { continuation.resume(throwing: error); return }
+                var data: [HRVResult] = []
+                results?.enumerateStatistics(from: start, to: end) { stats, _ in
+                    guard let avg = stats.averageQuantity() else { return }
+                    data.append(HRVResult(
+                        date: formatter.string(from: stats.startDate),
+                        avg_ms: avg.doubleValue(for: unit),
+                        min_ms: stats.minimumQuantity()?.doubleValue(for: unit),
+                        max_ms: stats.maximumQuantity()?.doubleValue(for: unit)
                     ))
                 }
                 continuation.resume(returning: data)
