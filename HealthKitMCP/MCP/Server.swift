@@ -66,6 +66,8 @@ actor HealthKitMCPServer {
                 text = try await QueryHRVTool.handle(args: args, manager: healthKit)
             case QueryBodyMassTool.toolName:
                 text = try await QueryBodyMassTool.handle(args: args, manager: healthKit)
+            case QuerySleepTool.toolName:
+                text = try await QuerySleepTool.handle(args: args, manager: healthKit)
             case QueryScheduledWorkoutsTool.toolName:
                 text = try await QueryScheduledWorkoutsTool.handle(manager: workoutKit)
             case DeleteScheduledWorkoutTool.toolName:
@@ -98,6 +100,7 @@ actor HealthKitMCPServer {
             QueryVO2MaxTool.definition,
             QueryHRVTool.definition,
             QueryBodyMassTool.definition,
+            QuerySleepTool.definition,
             QueryScheduledWorkoutsTool.definition,
             DeleteScheduledWorkoutTool.definition,
         ]

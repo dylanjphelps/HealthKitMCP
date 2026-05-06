@@ -22,6 +22,7 @@ actor HealthKitManager {
         HKQuantityType(.runningGroundContactTime),
         HKQuantityType(.runningVerticalOscillation),
         HKQuantityType(.runningStrideLength),
+        HKCategoryType(.sleepAnalysis),
     ]
 
     func requestAuthorization() async throws {
@@ -316,6 +317,30 @@ actor HealthKitManager {
                     data.append(BodyMassResult(date: formatter.string(from: stats.startDate), weight_lbs: lbs))
                 }
                 continuation.resume(returning: data)
+            }
+            store.execute(q)
+        }
+    }
+
+    // MARK: - Sleep
+
+    func querySleep(days: Int) async throws -> [SleepResult] {
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
+        let store = self.store
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let q = HKSampleQuery(
+                sampleType: HKCategoryType(.sleepAnalysis),
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: sort
+            ) { _, samples, error in
+                if let error { continuation.resume(throwing: error); return }
+                let categorySamples = (samples ?? []).compactMap { $0 as? HKCategorySample }
+                continuation.resume(returning: sleepResults(from: categorySamples))
             }
             store.execute(q)
         }
