@@ -1,4 +1,3 @@
-// HealthKitMCP/Health/WorkoutKitManager.swift
 import WorkoutKit
 import Foundation
 

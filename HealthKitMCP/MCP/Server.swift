@@ -1,4 +1,3 @@
-// HealthKitMCP/MCP/Server.swift
 import Foundation
 import MCP
 
@@ -93,15 +92,15 @@ actor HealthKitMCPServer {
     // MARK: - Tool Definitions
 
     private static let allTools: [Tool] = [
-            ScheduleWorkoutTool.definition,
-            QueryWorkoutsTool.definition,
-            QueryActivitySummaryTool.definition,
-            QueryRestingHeartRateTool.definition,
-            QueryVO2MaxTool.definition,
-            QueryHRVTool.definition,
-            QueryBodyMassTool.definition,
-            QuerySleepTool.definition,
-            QueryScheduledWorkoutsTool.definition,
-            DeleteScheduledWorkoutTool.definition,
-        ]
+        ScheduleWorkoutTool.definition,
+        QueryWorkoutsTool.definition,
+        QueryActivitySummaryTool.definition,
+        QueryRestingHeartRateTool.definition,
+        QueryVO2MaxTool.definition,
+        QueryHRVTool.definition,
+        QueryBodyMassTool.definition,
+        QuerySleepTool.definition,
+        QueryScheduledWorkoutsTool.definition,
+        DeleteScheduledWorkoutTool.definition,
+    ]
 }

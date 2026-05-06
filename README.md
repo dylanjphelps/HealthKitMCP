@@ -22,18 +22,13 @@ Open the app on your iPhone and tap **Grant HealthKit Access**. Approve all cate
 
 ### 3. Configure Claude Desktop
 
-The app displays the config snippet. Copy it and paste into `~/Library/Application Support/Claude/claude_desktop_config.json`:
+The app displays the URL. Add it to `~/Library/Application Support/Claude/claude_desktop_config.json` under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
     "healthkit": {
-      "command": "/opt/homebrew/bin/npx",
-      "args": [
-        "mcp-remote@latest",
-        "http://192.168.1.0:8080/mcp",
-        "--allow-http"
-      ]
+      "url": "http://192.168.1.x:8080/mcp"
     }
   }
 }
@@ -52,6 +47,9 @@ Keep the app open on your iPhone while using Claude Desktop. Claude will connect
 | `query_workouts` | Running sessions — distance, pace, HR, calories, elevation, power, cadence, per-mile splits, and per-interval breakdown for WorkoutKit-planned runs |
 | `query_activity_summary` | Daily steps, active calories, exercise minutes |
 | `query_resting_heart_rate` | Daily resting HR (avg, min, max) |
+| `query_hrv` | Daily heart rate variability — SDNN avg, min, max in milliseconds |
+| `query_sleep` | Nightly sleep summaries — total sleep, time in bed, and stage breakdown (REM, core, deep, awake) |
+| `query_body_mass` | Daily body weight in pounds (averaged across weigh-ins) |
 | `query_vo2max` | Most recent VO2 max estimate |
 | `schedule_workout` | Push a structured run directly to Apple Watch |
 | `query_scheduled_workouts` | List upcoming workouts scheduled to Apple Watch |

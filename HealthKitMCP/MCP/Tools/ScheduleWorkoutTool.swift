@@ -1,4 +1,3 @@
-// HealthKitMCP/MCP/Tools/ScheduleWorkoutTool.swift
 import Foundation
 import MCP
 import WorkoutKit
