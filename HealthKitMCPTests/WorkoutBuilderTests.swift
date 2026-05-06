@@ -405,3 +405,103 @@ final class WorkoutBuilderTests: XCTestCase {
         XCTAssertEqual(decoded.weight_lbs, 165.3)
     }
 }
+
+// MARK: - Sleep aggregation
+
+final class SleepAggregationTests: XCTestCase {
+
+    private var utcCalendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        return c
+    }()
+
+    private func makeDate(_ year: Int, _ month: Int, _ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
+        var comps = DateComponents()
+        comps.timeZone = TimeZone(identifier: "UTC")
+        comps.year = year; comps.month = month; comps.day = day
+        comps.hour = hour; comps.minute = minute
+        return utcCalendar.date(from: comps)!
+    }
+
+    private func makeSample(_ kind: HKCategoryValueSleepAnalysis, _ start: Date, _ end: Date) -> HKCategorySample {
+        HKCategorySample(type: HKCategoryType(.sleepAnalysis), value: kind.rawValue, start: start, end: end)
+    }
+
+    func testEmptySamplesReturnsEmptyArray() {
+        XCTAssertTrue(sleepResults(from: [], calendar: utcCalendar).isEmpty)
+    }
+
+    func testInBedSampleGroupedToStartDate() {
+        let s = makeSample(.inBed, makeDate(2026, 5, 4, 22), makeDate(2026, 5, 5, 6))
+        let results = sleepResults(from: [s], calendar: utcCalendar)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[0].date, "2026-05-04")
+        XCTAssertEqual(results[0].time_in_bed_minutes, 480.0, accuracy: 0.01)
+        XCTAssertEqual(results[0].total_sleep_minutes, 0.0, accuracy: 0.01)
+    }
+
+    func testStageDurationsAccumulatedCorrectly() throws {
+        // Night of May 4: 10pm–6am
+        let samples: [HKCategorySample] = [
+            makeSample(.inBed,      makeDate(2026, 5, 4, 22, 0),  makeDate(2026, 5, 5, 6, 0)),
+            makeSample(.asleepCore, makeDate(2026, 5, 4, 22, 15), makeDate(2026, 5, 5, 0, 15)), // 120 min
+            makeSample(.asleepREM,  makeDate(2026, 5, 5, 0, 15),  makeDate(2026, 5, 5, 1, 15)), // 60 min
+            makeSample(.asleepDeep, makeDate(2026, 5, 5, 1, 15),  makeDate(2026, 5, 5, 2, 15)), // 60 min
+            makeSample(.awake,      makeDate(2026, 5, 5, 2, 15),  makeDate(2026, 5, 5, 2, 30)), // 15 min
+        ]
+        let results = sleepResults(from: samples, calendar: utcCalendar)
+        XCTAssertEqual(results.count, 1)
+        let r = results[0]
+        XCTAssertEqual(r.date, "2026-05-04")
+        XCTAssertEqual(r.total_sleep_minutes, 240.0, accuracy: 0.01)
+        XCTAssertEqual(r.time_in_bed_minutes, 480.0, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(r.stages.core_minutes),  120.0, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(r.stages.rem_minutes),    60.0, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(r.stages.deep_minutes),   60.0, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(r.stages.awake_minutes),  15.0, accuracy: 0.01)
+    }
+
+    func testStageFieldsNilWhenStageAbsent() {
+        // Only inBed — no stage breakdown recorded
+        let s = makeSample(.inBed, makeDate(2026, 5, 4, 22), makeDate(2026, 5, 5, 6))
+        let results = sleepResults(from: [s], calendar: utcCalendar)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertNil(results[0].stages.rem_minutes)
+        XCTAssertNil(results[0].stages.core_minutes)
+        XCTAssertNil(results[0].stages.deep_minutes)
+        XCTAssertNil(results[0].stages.awake_minutes)
+    }
+
+    func testTwoNightsReturnedChronologically() {
+        let samples: [HKCategorySample] = [
+            makeSample(.inBed, makeDate(2026, 5, 5, 22), makeDate(2026, 5, 6, 6)),
+            makeSample(.inBed, makeDate(2026, 5, 4, 22), makeDate(2026, 5, 5, 6)),
+        ]
+        let results = sleepResults(from: samples, calendar: utcCalendar)
+        XCTAssertEqual(results.count, 2)
+        XCTAssertEqual(results[0].date, "2026-05-04")
+        XCTAssertEqual(results[1].date, "2026-05-05")
+    }
+
+    func testSessionStartingJustBeforeMidnightGroupedToStartDate() {
+        // Starts 11:59pm May 4, wakes 6am May 5 — should be "2026-05-04"
+        let s = makeSample(.inBed, makeDate(2026, 5, 4, 23, 59), makeDate(2026, 5, 5, 6, 0))
+        let results = sleepResults(from: [s], calendar: utcCalendar)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[0].date, "2026-05-04")
+    }
+
+    func testAsleepUnspecifiedCountsTowardTotalSleepButNoStageBreakdown() {
+        let samples: [HKCategorySample] = [
+            makeSample(.inBed,            makeDate(2026, 5, 4, 22), makeDate(2026, 5, 5, 6)), // 480 min
+            makeSample(.asleepUnspecified, makeDate(2026, 5, 4, 22, 30), makeDate(2026, 5, 5, 5, 30)), // 420 min
+        ]
+        let results = sleepResults(from: samples, calendar: utcCalendar)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[0].total_sleep_minutes, 420.0, accuracy: 0.01)
+        XCTAssertNil(results[0].stages.core_minutes)
+        XCTAssertNil(results[0].stages.rem_minutes)
+        XCTAssertNil(results[0].stages.deep_minutes)
+    }
+}

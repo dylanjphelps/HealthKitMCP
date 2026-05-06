@@ -274,6 +274,63 @@ actor HealthKitManager {
     }
 }
 
+// MARK: - Sleep aggregation helper
+
+func sleepResults(from samples: [HKCategorySample], calendar: Calendar = .current) -> [SleepResult] {
+    typealias Acc = (inBed: Double, totalSleep: Double, core: Double, rem: Double, deep: Double, awake: Double)
+    var byDay: [Date: Acc] = [:]
+
+    for sample in samples {
+        // Use noon-boundary: samples starting before noon are attributed to the previous calendar day's
+        // night (e.g. 1am May 5 → "May 4 night"). Samples starting at noon or after start a new night.
+        let startOfDay = calendar.startOfDay(for: sample.startDate)
+        let noonOfDay = calendar.date(byAdding: .hour, value: 12, to: startOfDay)!
+        let day = sample.startDate < noonOfDay
+            ? calendar.date(byAdding: .day, value: -1, to: startOfDay)!
+            : startOfDay
+        let minutes = sample.endDate.timeIntervalSince(sample.startDate) / 60.0
+        var e = byDay[day] ?? (0, 0, 0, 0, 0, 0)
+        switch sample.value {
+        case HKCategoryValueSleepAnalysis.inBed.rawValue:
+            e.inBed += minutes
+        case HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
+            e.totalSleep += minutes
+        case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
+            e.totalSleep += minutes; e.core += minutes
+        case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
+            e.totalSleep += minutes; e.rem += minutes
+        case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
+            e.totalSleep += minutes; e.deep += minutes
+        case HKCategoryValueSleepAnalysis.awake.rawValue:
+            e.awake += minutes
+        default:
+            break
+        }
+        byDay[day] = e
+    }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withFullDate]
+    formatter.timeZone = calendar.timeZone
+
+    return byDay
+        .filter { $0.value.inBed > 0 || $0.value.totalSleep > 0 }
+        .sorted { $0.key < $1.key }
+        .map { day, e in
+            SleepResult(
+                date: formatter.string(from: day),
+                total_sleep_minutes: e.totalSleep,
+                time_in_bed_minutes: e.inBed,
+                stages: SleepStagesResult(
+                    awake_minutes: e.awake > 0 ? e.awake : nil,
+                    rem_minutes: e.rem > 0 ? e.rem : nil,
+                    core_minutes: e.core > 0 ? e.core : nil,
+                    deep_minutes: e.deep > 0 ? e.deep : nil
+                )
+            )
+        }
+}
+
 // MARK: - Workout detail helpers
 
 private func splitResults(from workout: HKWorkout, totalDistance: Double) -> [SplitResult]? {
