@@ -154,19 +154,71 @@ actor WorkoutKitManager {
         let scheduler = try await authorizedScheduler()
         let plans = await scheduler.scheduledWorkouts
         return plans.enumerated().map { index, scheduled in
-            let (title, type) = workoutInfo(from: scheduled.plan)
+            let info = workoutInfo(from: scheduled.plan)
             let date = dateString(from: scheduled.date)
-            return ScheduledWorkoutResult(index: index, date: date, title: title, type: type)
+            return ScheduledWorkoutResult(index: index, date: date, title: info.title, type: info.type,
+                                          warmup: info.warmup, blocks: info.blocks, cooldown: info.cooldown)
         }
     }
 
-    private func workoutInfo(from plan: WorkoutPlan) -> (title: String, type: String) {
+    private func workoutInfo(from plan: WorkoutPlan) -> (title: String, type: String, warmup: ScheduledWorkoutStepResult?, blocks: [ScheduledWorkoutBlockResult]?, cooldown: ScheduledWorkoutStepResult?) {
         switch plan.workout {
         case .custom(let custom):
-            return (custom.displayName ?? "(unnamed)", "custom")
+            let warmup = custom.warmup.map { stepResult(from: $0, purpose: "warmup") }
+            let blocks: [ScheduledWorkoutBlockResult] = custom.blocks.map { block in
+                let steps = block.steps.map { intervalStep -> ScheduledWorkoutStepResult in
+                    let purpose = intervalStep.purpose == .recovery ? "recovery" : "work"
+                    return stepResult(from: intervalStep.step, purpose: purpose)
+                }
+                return ScheduledWorkoutBlockResult(iterations: block.iterations, steps: steps)
+            }
+            let cooldown = custom.cooldown.map { stepResult(from: $0, purpose: "cooldown") }
+            return (custom.displayName ?? "(unnamed)", "custom", warmup, blocks.isEmpty ? nil : blocks, cooldown)
         default:
-            return ("(unnamed)", "unknown")
+            return ("(unnamed)", "unknown", nil, nil, nil)
         }
+    }
+
+    func stepResult(from step: WorkoutStep, purpose: String) -> ScheduledWorkoutStepResult {
+        let (goalType, goalValue) = goalInfo(from: step.goal)
+        let (pace, hr) = alertInfo(from: step.alert)
+        return ScheduledWorkoutStepResult(
+            purpose: purpose,
+            goal_type: goalType,
+            goal_value: goalValue,
+            target_pace_sec_per_mile: pace,
+            target_heart_rate_bpm: hr,
+            display_name: step.displayName
+        )
+    }
+
+    private func goalInfo(from goal: WorkoutGoal) -> (type: String, value: Double?) {
+        switch goal {
+        case .open:
+            return ("open", nil)
+        case .distance(let d, let unit):
+            return ("distance", Measurement(value: d, unit: unit).converted(to: .miles).value)
+        case .time(let t, let unit):
+            return ("time", Measurement(value: t, unit: unit).converted(to: .minutes).value)
+        @unknown default:
+            return ("unknown", nil)
+        }
+    }
+
+    private func alertInfo(from alert: (any WorkoutAlert)?) -> (pace: Double?, hr: Double?) {
+        guard let alert else { return (nil, nil) }
+        if let speedAlert = alert as? SpeedRangeAlert {
+            let lower = speedAlert.target.lowerBound.converted(to: .metersPerSecond).value
+            let upper = speedAlert.target.upperBound.converted(to: .metersPerSecond).value
+            let midSpeed = (lower + upper) / 2
+            return (1609.344 / midSpeed, nil)
+        }
+        if let hrAlert = alert as? HeartRateRangeAlert {
+            let lower = hrAlert.target.lowerBound.value
+            let upper = hrAlert.target.upperBound.value
+            return (nil, (lower + upper) / 2)
+        }
+        return (nil, nil)
     }
 
     private func dateString(from components: DateComponents) -> String {
@@ -184,9 +236,9 @@ actor WorkoutKitManager {
         }
         let target = plans[index]
         await scheduler.remove(target.plan, at: target.date)
-        let (title, type) = workoutInfo(from: target.plan)
+        let info = workoutInfo(from: target.plan)
         let date = dateString(from: target.date)
-        return ScheduledWorkoutResult(index: index, date: date, title: title, type: type)
+        return ScheduledWorkoutResult(index: index, date: date, title: info.title, type: info.type)
     }
 }
 

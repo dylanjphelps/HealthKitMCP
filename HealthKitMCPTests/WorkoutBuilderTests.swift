@@ -235,6 +235,110 @@ final class WorkoutBuilderTests: XCTestCase {
         XCTAssertFalse(json.contains("\"intervals\""), "nil intervals should be omitted from JSON")
     }
 
+    // MARK: - Scheduled workout step models
+
+    func testScheduledWorkoutStepResultTimeGoalWithPaceRoundTrip() throws {
+        let step = ScheduledWorkoutStepResult(
+            purpose: "work",
+            goal_type: "time",
+            goal_value: 3.0,
+            target_pace_sec_per_mile: 270.0,
+            target_heart_rate_bpm: nil,
+            display_name: nil
+        )
+        let json = try encodeToJSON(step)
+        let decoded = try JSONDecoder().decode(ScheduledWorkoutStepResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.purpose, "work")
+        XCTAssertEqual(decoded.goal_type, "time")
+        XCTAssertEqual(decoded.goal_value, 3.0)
+        XCTAssertEqual(decoded.target_pace_sec_per_mile, 270.0)
+        XCTAssertNil(decoded.target_heart_rate_bpm)
+        XCTAssertNil(decoded.display_name)
+    }
+
+    func testScheduledWorkoutBlockResultRoundTrip() throws {
+        let work = ScheduledWorkoutStepResult(purpose: "work", goal_type: "time", goal_value: 3.0, target_pace_sec_per_mile: 270.0, target_heart_rate_bpm: nil, display_name: nil)
+        let rest = ScheduledWorkoutStepResult(purpose: "recovery", goal_type: "time", goal_value: 1.5, target_pace_sec_per_mile: nil, target_heart_rate_bpm: nil, display_name: nil)
+        let block = ScheduledWorkoutBlockResult(iterations: 6, steps: [work, rest])
+        let json = try encodeToJSON(block)
+        let decoded = try JSONDecoder().decode(ScheduledWorkoutBlockResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.iterations, 6)
+        XCTAssertEqual(decoded.steps.count, 2)
+        XCTAssertEqual(decoded.steps[0].purpose, "work")
+        XCTAssertEqual(decoded.steps[1].purpose, "recovery")
+    }
+
+    func testScheduledWorkoutResultWithStepsRoundTrip() throws {
+        let warmupStep = ScheduledWorkoutStepResult(purpose: "warmup", goal_type: "time", goal_value: 10.0, target_pace_sec_per_mile: nil, target_heart_rate_bpm: nil, display_name: nil)
+        let work = ScheduledWorkoutStepResult(purpose: "work", goal_type: "time", goal_value: 3.0, target_pace_sec_per_mile: 270.0, target_heart_rate_bpm: nil, display_name: nil)
+        let rest = ScheduledWorkoutStepResult(purpose: "recovery", goal_type: "time", goal_value: 1.5, target_pace_sec_per_mile: nil, target_heart_rate_bpm: nil, display_name: nil)
+        let block = ScheduledWorkoutBlockResult(iterations: 6, steps: [work, rest])
+        let cooldownStep = ScheduledWorkoutStepResult(purpose: "cooldown", goal_type: "time", goal_value: 5.0, target_pace_sec_per_mile: nil, target_heart_rate_bpm: nil, display_name: nil)
+        let original = ScheduledWorkoutResult(
+            index: 0,
+            date: "2026-05-10",
+            title: "6x3min",
+            type: "custom",
+            warmup: warmupStep,
+            blocks: [block],
+            cooldown: cooldownStep
+        )
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(ScheduledWorkoutResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.warmup?.goal_value, 10.0)
+        XCTAssertEqual(decoded.blocks?.count, 1)
+        XCTAssertEqual(decoded.blocks?.first?.iterations, 6)
+        XCTAssertEqual(decoded.blocks?.first?.steps.count, 2)
+        XCTAssertEqual(decoded.cooldown?.goal_type, "time")
+    }
+
+    func testScheduledWorkoutResultNilStepsOmittedFromJSON() throws {
+        let original = ScheduledWorkoutResult(index: 0, date: "2026-05-03", title: "Easy Run", type: "custom")
+        let json = try encodeToJSON(original)
+        XCTAssertFalse(json.contains("\"warmup\""), "nil warmup should be omitted")
+        XCTAssertFalse(json.contains("\"blocks\""), "nil blocks should be omitted")
+        XCTAssertFalse(json.contains("\"cooldown\""), "nil cooldown should be omitted")
+    }
+
+    func testStepResultFromTimeGoalWithPaceAlert() async throws {
+        let manager = WorkoutKitManager()
+        let speedAlert = SpeedRangeAlert(
+            target: Measurement(value: 1609.344 / 280.0, unit: .metersPerSecond)
+                ... Measurement(value: 1609.344 / 260.0, unit: .metersPerSecond),
+            metric: .current
+        )
+        let step = WorkoutStep(goal: .time(3 * 60, .seconds), alert: speedAlert, displayName: "Fast interval")
+        let result = await manager.stepResult(from: step, purpose: "work")
+        XCTAssertEqual(result.purpose, "work")
+        XCTAssertEqual(result.goal_type, "time")
+        XCTAssertEqual(result.goal_value ?? 0, 3.0, accuracy: 0.01)
+        XCTAssertEqual(result.target_pace_sec_per_mile ?? 0, 270.0, accuracy: 5.0)
+        XCTAssertNil(result.target_heart_rate_bpm)
+        XCTAssertEqual(result.display_name, "Fast interval")
+    }
+
+    func testStepResultFromDistanceGoalWithHRAlert() async throws {
+        let manager = WorkoutKitManager()
+        let hrAlert = HeartRateRangeAlert.heartRate(145.0...155.0)
+        let step = WorkoutStep(goal: .distance(1.0, .miles), alert: hrAlert, displayName: nil)
+        let result = await manager.stepResult(from: step, purpose: "work")
+        XCTAssertEqual(result.goal_type, "distance")
+        XCTAssertEqual(result.goal_value ?? 0, 1.0, accuracy: 0.001)
+        XCTAssertNil(result.target_pace_sec_per_mile)
+        XCTAssertEqual(result.target_heart_rate_bpm ?? 0, 150.0, accuracy: 0.1)
+        XCTAssertNil(result.display_name)
+    }
+
+    func testStepResultFromOpenGoal() async throws {
+        let manager = WorkoutKitManager()
+        let step = WorkoutStep(goal: .open, alert: nil, displayName: nil)
+        let result = await manager.stepResult(from: step, purpose: "warmup")
+        XCTAssertEqual(result.goal_type, "open")
+        XCTAssertNil(result.goal_value)
+        XCTAssertNil(result.target_pace_sec_per_mile)
+        XCTAssertNil(result.target_heart_rate_bpm)
+    }
+
     // MARK: - Interval type label
 
     func testActivityTypeLabelMapsAllSpecifiedCases() {

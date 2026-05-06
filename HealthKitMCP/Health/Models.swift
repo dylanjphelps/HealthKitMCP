@@ -66,9 +66,39 @@ struct VO2MaxResult: Codable {
     let vo2max_ml_kg_min: Double
 }
 
+struct ScheduledWorkoutStepResult: Codable {
+    let purpose: String
+    let goal_type: String
+    let goal_value: Double?
+    let target_pace_sec_per_mile: Double?
+    let target_heart_rate_bpm: Double?
+    let display_name: String?
+}
+
+struct ScheduledWorkoutBlockResult: Codable {
+    let iterations: Int
+    let steps: [ScheduledWorkoutStepResult]
+}
+
 struct ScheduledWorkoutResult: Codable {
     let index: Int
     let date: String
     let title: String
     let type: String
+    let warmup: ScheduledWorkoutStepResult?
+    let blocks: [ScheduledWorkoutBlockResult]?
+    let cooldown: ScheduledWorkoutStepResult?
+
+    init(index: Int, date: String, title: String, type: String,
+         warmup: ScheduledWorkoutStepResult? = nil,
+         blocks: [ScheduledWorkoutBlockResult]? = nil,
+         cooldown: ScheduledWorkoutStepResult? = nil) {
+        self.index = index
+        self.date = date
+        self.title = title
+        self.type = type
+        self.warmup = warmup
+        self.blocks = blocks
+        self.cooldown = cooldown
+    }
 }
