@@ -11,6 +11,7 @@ actor HealthKitManager {
         HKObjectType.workoutType(),
         HKQuantityType(.restingHeartRate),
         HKQuantityType(.heartRateVariabilitySDNN),
+        HKQuantityType(.bodyMass),
         HKQuantityType(.vo2Max),
         HKQuantityType(.stepCount),
         HKQuantityType(.activeEnergyBurned),
@@ -277,6 +278,42 @@ actor HealthKitManager {
                         min_ms: stats.minimumQuantity()?.doubleValue(for: unit),
                         max_ms: stats.maximumQuantity()?.doubleValue(for: unit)
                     ))
+                }
+                continuation.resume(returning: data)
+            }
+            store.execute(q)
+        }
+    }
+
+    // MARK: - Body Mass
+
+    func queryBodyMass(days: Int) async throws -> [BodyMassResult] {
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let interval = DateComponents(day: 1)
+        let anchor = Calendar.current.startOfDay(for: start)
+        let kgUnit = HKUnit.gramUnit(with: .kilo)
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate]
+        let store = self.store
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let q = HKStatisticsCollectionQuery(
+                quantityType: HKQuantityType(.bodyMass),
+                quantitySamplePredicate: predicate,
+                options: [.discreteAverage],
+                anchorDate: anchor,
+                intervalComponents: interval
+            )
+            q.initialResultsHandler = { _, results, error in
+                if let error { continuation.resume(throwing: error); return }
+                var data: [BodyMassResult] = []
+                results?.enumerateStatistics(from: start, to: end) { stats, _ in
+                    guard let avg = stats.averageQuantity() else { return }
+                    let kg = avg.doubleValue(for: kgUnit)
+                    let lbs = round(kg * 2.20462 * 10) / 10
+                    data.append(BodyMassResult(date: formatter.string(from: stats.startDate), weight_lbs: lbs))
                 }
                 continuation.resume(returning: data)
             }

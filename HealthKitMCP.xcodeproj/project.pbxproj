@@ -21,6 +21,7 @@
 		736618DA71A1243517A3AAA6 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 63267DFA5C0706B1A6CB09B0 /* MCP */; };
 		A28BB3E4B5C6FCE6A6DE2E42 /* QueryVO2MaxTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */; };
 		C4A3D4D01E2D4A4EA3986A47 /* QueryHRVTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066D8DFE81AC470FA2CDBCC8 /* QueryHRVTool.swift */; };
+		5A245B16DCA55FF5D8E595B4 /* QueryBodyMassTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9D69064D737ACA080E44BC /* QueryBodyMassTool.swift */; };
 		B028BBDDF4463C83F8D0DC78 /* HTTPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C5FA432DE27EF3274A1B0E6 /* HTTPServer.swift */; };
 		B66F455B2E39D29414FD4987 /* QueryActivitySummaryTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6C296BB0C1495B08B31D70E /* QueryActivitySummaryTool.swift */; };
 		C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */; };
@@ -57,6 +58,7 @@
 		93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolHelpers.swift; sourceTree = "<group>"; };
 		A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryVO2MaxTool.swift; sourceTree = "<group>"; };
 		066D8DFE81AC470FA2CDBCC8 /* QueryHRVTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryHRVTool.swift; sourceTree = "<group>"; };
+		9D9D69064D737ACA080E44BC /* QueryBodyMassTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBodyMassTool.swift; sourceTree = "<group>"; };
 		A55533F904A8BB5854889040 /* QueryToolParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryToolParsingTests.swift; sourceTree = "<group>"; };
 		A6B350F6E313487F40E099E9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA5724F458BB4B888722BA05 /* QueryScheduledWorkoutsTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryScheduledWorkoutsTool.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 				AA5724F458BB4B888722BA05 /* QueryScheduledWorkoutsTool.swift */,
 				A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */,
 				066D8DFE81AC470FA2CDBCC8 /* QueryHRVTool.swift */,
+				9D9D69064D737ACA080E44BC /* QueryBodyMassTool.swift */,
 				CECD30511D79B99814661EA9 /* QueryWorkoutsTool.swift */,
 				BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */,
 				93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */,
@@ -284,6 +287,7 @@
 				3F84C774696231DE4A25594B /* QueryScheduledWorkoutsTool.swift in Sources */,
 				A28BB3E4B5C6FCE6A6DE2E42 /* QueryVO2MaxTool.swift in Sources */,
 				C4A3D4D01E2D4A4EA3986A47 /* QueryHRVTool.swift in Sources */,
+				5A245B16DCA55FF5D8E595B4 /* QueryBodyMassTool.swift in Sources */,
 				51A30045C94FCFFE42FB3A00 /* QueryWorkoutsTool.swift in Sources */,
 				1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */,
 				CE523664A9C21A5C3A830FFE /* Server.swift in Sources */,
