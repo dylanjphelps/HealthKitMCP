@@ -7,20 +7,15 @@ actor HTTPServer {
     static let port: UInt16 = 8080
 
     private let networkQueue = DispatchQueue(label: "HealthKitMCP.HTTPServer")
-    private var transport: StatelessHTTPServerTransport
+    private var transport: StatefulHTTPServerTransport
     private var listener: NWListener?
-    private var serverResetter: (@Sendable () async -> Void)?
 
-    init(transport: StatelessHTTPServerTransport) {
+    init(transport: StatefulHTTPServerTransport) {
         self.transport = transport
     }
 
-    func updateTransport(_ newTransport: StatelessHTTPServerTransport) {
+    func updateTransport(_ newTransport: StatefulHTTPServerTransport) {
         transport = newTransport
-    }
-
-    func setServerResetter(_ resetter: @escaping @Sendable () async -> Void) {
-        serverResetter = resetter
     }
 
     // MARK: - Lifecycle
@@ -59,32 +54,8 @@ actor HTTPServer {
             return
         }
 
-        var response = await transport.handleRequest(request)
-
-        // mcp-remote sends its own initialize before proxying the client's initialize.
-        // When the second initialize arrives the MCP Server actor rejects it. Detect that,
-        // spin up a fresh server+transport, and retry so the client's initialize succeeds.
-        if Self.isInitializeRequest(request), Self.isAlreadyInitializedError(response) {
-            await serverResetter?()
-            response = await transport.handleRequest(request)
-        }
-
+        let response = await transport.handleRequest(request)
         await writeResponse(response, to: connection)
-    }
-
-    private static func isInitializeRequest(_ request: HTTPRequest) -> Bool {
-        guard let body = request.body,
-              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
-              let method = json["method"] as? String else { return false }
-        return method == "initialize"
-    }
-
-    private static func isAlreadyInitializedError(_ response: HTTPResponse) -> Bool {
-        guard let data = response.bodyData,
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let error = json["error"] as? [String: Any],
-              let message = error["message"] as? String else { return false }
-        return message.contains("already initialized")
     }
 
     // MARK: - Reading
@@ -95,12 +66,10 @@ actor HTTPServer {
 
         while true {
             guard let chunk = await receiveChunk(from: connection), !chunk.isEmpty else {
-                // Connection closed or errored — only return data if no body was expected
                 if let sepRange = buffer.range(of: sep) {
                     let headerBytes = buffer[..<sepRange.lowerBound]
                     let bodyStart = sepRange.upperBound
                     if let contentLength = Self.parseContentLength(from: headerBytes) {
-                        // Body was expected but not fully received
                         return buffer.count >= bodyStart + contentLength ? Data(buffer[..<(bodyStart + contentLength)]) : nil
                     }
                 }
@@ -117,9 +86,8 @@ actor HTTPServer {
                 if buffer.count >= bodyStart + contentLength {
                     return Data(buffer[..<(bodyStart + contentLength)])
                 }
-                // Need more data — continue loop
             } else {
-                return buffer   // No body (GET, DELETE)
+                return buffer
             }
         }
     }

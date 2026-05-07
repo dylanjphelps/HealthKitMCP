@@ -13,6 +13,11 @@ enum QueryBodyMassTool {
                     "type": .string("integer"),
                     "description": .string("Number of days to look back. Default 30."),
                     "default": .int(30)
+                ]),
+                "limit": .object([
+                    "type": .string("integer"),
+                    "description": .string("Maximum number of daily body-mass rows to return. Default 50, max 500."),
+                    "default": .int(50)
                 ])
             ])
         ])
@@ -20,7 +25,8 @@ enum QueryBodyMassTool {
 
     static func handle(args: [String: Value], manager: HealthKitManager) async throws -> String {
         let days = parseDays(from: args, default: 30)
-        let results = try await manager.queryBodyMass(days: days)
-        return try encodeToJSON(results)
+        let limit = parseLimit(from: args)
+        let results = (try await manager.queryBodyMass(days: days)).map(\.rounded)
+        return try encodeToCompactJSON(paginatedResponse(from: results, limit: limit))
     }
 }

@@ -23,6 +23,72 @@ final class QueryToolParsingTests: XCTestCase {
         }
     }
 
+    func testRoundedValueUsesRequestedPrecision() {
+        let cases: [(name: String, value: Double, places: Int, expected: Double)] = [
+            ("two decimal places", 3.14159, 2, 3.14),
+            ("zero decimal places", 3.14159, 0, 3.0),
+            ("zero stays zero", 0.0, 2, 0.0),
+            ("negative values round correctly", -1.23456, 3, -1.235),
+            ("large values round correctly", 1_234_567.89, 1, 1_234_567.9)
+        ]
+
+        for testCase in cases {
+            XCTAssertEqual(
+                roundedValue(testCase.value, places: testCase.places),
+                testCase.expected,
+                accuracy: 0.000_001,
+                testCase.name
+            )
+        }
+    }
+
+    func testParseLimitAppliesDefaultAndBounds() {
+        let cases: [(name: String, args: [String: Value], defaultLimit: Int, maxLimit: Int, expected: Int)] = [
+            ("missing uses default", [:], 50, 500, 50),
+            ("custom limit within bounds", ["limit": .int(125)], 50, 500, 125),
+            ("limit above max is clamped", ["limit": .int(700)], 50, 500, 500),
+            ("zero uses default", ["limit": .int(0)], 50, 500, 50),
+            ("negative uses default", ["limit": .int(-10)], 50, 500, 50)
+        ]
+
+        for testCase in cases {
+            XCTAssertEqual(
+                parseLimit(from: testCase.args, default: testCase.defaultLimit, max: testCase.maxLimit),
+                testCase.expected,
+                testCase.name
+            )
+        }
+    }
+
+    func testParseBooleanOptionDefaultsToFalseWhenMissing() {
+        let keys = ["include_splits", "include_steps", "include_intervals", "include_description"]
+
+        for key in keys {
+            XCTAssertFalse(parseBooleanOption(key, from: [:]), key)
+        }
+    }
+
+    func testParseBooleanOptionReturnsExplicitValue() {
+        let cases: [(name: String, key: String, args: [String: Value], expected: Bool)] = [
+            ("include_splits true", "include_splits", ["include_splits": .bool(true)], true),
+            ("include_splits false", "include_splits", ["include_splits": .bool(false)], false),
+            ("include_steps true", "include_steps", ["include_steps": .bool(true)], true),
+            ("include_steps false", "include_steps", ["include_steps": .bool(false)], false),
+            ("include_intervals true", "include_intervals", ["include_intervals": .bool(true)], true),
+            ("include_intervals false", "include_intervals", ["include_intervals": .bool(false)], false),
+            ("include_description true", "include_description", ["include_description": .bool(true)], true),
+            ("include_description false", "include_description", ["include_description": .bool(false)], false)
+        ]
+
+        for testCase in cases {
+            XCTAssertEqual(
+                parseBooleanOption(testCase.key, from: testCase.args),
+                testCase.expected,
+                testCase.name
+            )
+        }
+    }
+
     func testVO2MaxToolNameIsCorrect() {
         XCTAssertEqual(QueryVO2MaxTool.toolName, "query_vo2max")
     }

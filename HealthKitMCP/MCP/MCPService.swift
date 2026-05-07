@@ -28,11 +28,6 @@ final class MCPService: ObservableObject {
                 isRunning = true
                 await launch(server: initialServer, on: http)
 
-                await http.setServerResetter { [weak self, weak http] in
-                    guard let self, let http else { return }
-                    await self.replaceServer(on: http)
-                }
-
                 while !Task.isCancelled {
                     try await Task.sleep(for: .seconds(3600))
                 }

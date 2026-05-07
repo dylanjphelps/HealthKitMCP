@@ -12,9 +12,9 @@ enum QueryVO2MaxTool {
         ])
     )
 
-    static func handle(args: [String: Value], manager: HealthKitManager) async throws -> String {
+    static func handle(args _: [String: Value], manager: HealthKitManager) async throws -> String {
         if let result = try await manager.queryVO2Max() {
-            return try encodeToJSON(result)
+            return try encodeToCompactJSON(result.rounded)
         }
         return #"{"error":"No VO2 max data available"}"#
     }

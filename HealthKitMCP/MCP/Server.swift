@@ -2,21 +2,21 @@ import MCP
 
 actor HealthKitMCPServer {
     private let server: Server
-    let transport: StatelessHTTPServerTransport
+    let transport: StatefulHTTPServerTransport
     private let healthKit: HealthKitManager
     private let workoutKit: WorkoutKitManager
 
     init() {
         // Disable origin validation: requests come from a Mac on the local network,
         // not localhost, so the default localhost-only check would reject them.
-        // Use stateless transport: no session management, so reconnections always work.
         let pipeline = StandardValidationPipeline(validators: [
             OriginValidator.disabled,
-            AcceptHeaderValidator(mode: .jsonOnly),
+            AcceptHeaderValidator(mode: .sseRequired),
             ContentTypeValidator(),
             ProtocolVersionValidator(),
+            SessionValidator(),
         ])
-        self.transport = StatelessHTTPServerTransport(validationPipeline: pipeline)
+        self.transport = StatefulHTTPServerTransport(validationPipeline: pipeline)
         self.healthKit = HealthKitManager()
         self.workoutKit = WorkoutKitManager()
         self.server = Server(

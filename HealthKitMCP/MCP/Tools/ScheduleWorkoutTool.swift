@@ -65,7 +65,12 @@ enum ScheduleWorkoutTool {
                         "target_pace_seconds_per_mile": .object(["type": .string("number")])
                     ])
                 ]),
-                "scheduled_date": .object(["type": .string("string"), "description": .string("YYYY-MM-DD. Defaults to today.")])
+                "scheduled_date": .object(["type": .string("string"), "description": .string("YYYY-MM-DD. Defaults to today.")]),
+                "include_description": .object([
+                    "type": .string("boolean"),
+                    "description": .string("When true, include the human-readable workout description in the response. Default false."),
+                    "default": .bool(false)
+                ])
             ]),
             "required": .array([.string("title"), .string("blocks")])
         ])
@@ -80,6 +85,7 @@ enum ScheduleWorkoutTool {
             return "Missing required parameter: blocks (must be a non-empty array)"
         }
 
+        let includeDescription = parseBoolean(named: "include_description", from: args) ?? false
         let scheduledDate = args["scheduled_date"]?.stringValue ?? isoToday()
         let warmup = parseStepSpec(from: args["warmup"])
         let cooldown = parseStepSpec(from: args["cooldown"])
@@ -102,15 +108,13 @@ enum ScheduleWorkoutTool {
         struct Result: Encodable {
             let title: String
             let date: String
-            let description: String
-            let scheduled: Bool
+            let description: String?
         }
 
-        return try encodeToJSON(Result(
+        return try encodeToCompactJSON(Result(
             title: title,
             date: scheduledDate,
-            description: description,
-            scheduled: true
+            description: includeDescription ? description : nil
         ))
     }
 

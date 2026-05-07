@@ -27,6 +27,6 @@ enum DeleteScheduledWorkoutTool {
             return "Missing required parameter: index"
         }
         let deleted = try await manager.deleteScheduled(at: index)
-        return try encodeToJSON(deleted)
+        return try encodeToCompactJSON(deleted.rounded)
     }
 }
