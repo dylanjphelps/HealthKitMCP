@@ -29,9 +29,34 @@ final class HTTPParserTests: XCTestCase {
         XCTAssertEqual(req?.header("Host"), "iphone.local:8080")
     }
 
+    func testParseRequestTrimsHeaderWhitespaceAndPreservesQueryPath() {
+        let raw = "GET /mcp?transport=sse HTTP/1.1\r\nHost :  iphone.local:8080  \r\nX-Test: value\r\nInvalidHeader\r\n\r\n"
+
+        let req = HTTPServer.parseRequest(Data(raw.utf8))
+
+        XCTAssertEqual(req?.path, "/mcp?transport=sse")
+        XCTAssertEqual(req?.header("Host"), "iphone.local:8080")
+        XCTAssertEqual(req?.header("X-Test"), "value")
+        XCTAssertNil(req?.body)
+    }
+
+    func testParseRequestEmptyBodyReturnsNil() {
+        let raw = "POST /mcp HTTP/1.1\r\nContent-Length: 0\r\n\r\n"
+
+        let req = HTTPServer.parseRequest(Data(raw.utf8))
+
+        XCTAssertEqual(req?.method, "POST")
+        XCTAssertNil(req?.body)
+    }
+
     func testContentLengthExtraction() {
         let headerData = Data("POST /mcp HTTP/1.1\r\nContent-Length: 42\r\nHost: x".utf8)
         XCTAssertEqual(HTTPServer.parseContentLength(from: headerData), 42)
+    }
+
+    func testContentLengthExtractionCaseInsensitiveAndTrimmed() {
+        let headerData = Data("POST /mcp HTTP/1.1\r\ncontent-length:   12  \r\nHost: x".utf8)
+        XCTAssertEqual(HTTPServer.parseContentLength(from: headerData), 12)
     }
 
     func testMissingContentLengthReturnsNil() {
@@ -39,8 +64,18 @@ final class HTTPParserTests: XCTestCase {
         XCTAssertNil(HTTPServer.parseContentLength(from: headerData))
     }
 
+    func testInvalidContentLengthReturnsNil() {
+        let headerData = Data("POST /mcp HTTP/1.1\r\nContent-Length: nope\r\nHost: x".utf8)
+        XCTAssertNil(HTTPServer.parseContentLength(from: headerData))
+    }
+
     func testMalformedRequestLineReturnsNil() {
         let data = Data("BADREQUEST\r\n\r\n".utf8)
+        XCTAssertNil(HTTPServer.parseRequest(data))
+    }
+
+    func testMissingHeaderSeparatorReturnsNil() {
+        let data = Data("GET /mcp HTTP/1.1\r\nHost: x".utf8)
         XCTAssertNil(HTTPServer.parseRequest(data))
     }
 }

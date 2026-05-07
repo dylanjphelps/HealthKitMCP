@@ -5,34 +5,22 @@ import WorkoutKit
 
 final class QueryToolParsingTests: XCTestCase {
 
-    func testQueryWorkoutsDefaultDays() {
-        let days = parseDays(from: [:])
-        XCTAssertEqual(days, 7)
-    }
+    func testParseDaysUsesIntegerValueOrDefault() {
+        let cases: [(name: String, args: [String: Value], defaultDays: Int, expected: Int)] = [
+            ("missing uses default", [:], 7, 7),
+            ("custom integer overrides default", ["days": .int(14)], 7, 14),
+            ("body mass default is supported", [:], 30, 30),
+            ("non-integer value falls back to default", ["days": .double(14.5)], 7, 7),
+            ("string value falls back to default", ["days": .string("14")], 7, 7)
+        ]
 
-    func testQueryWorkoutsCustomDays() {
-        let days = parseDays(from: ["days": .int(14)])
-        XCTAssertEqual(days, 14)
-    }
-
-    func testQueryActivitySummaryDefaultDays() {
-        let days = parseDays(from: [:])
-        XCTAssertEqual(days, 7)
-    }
-
-    func testQueryRestingHeartRateDefaultDays() {
-        let days = parseDays(from: [:])
-        XCTAssertEqual(days, 7)
-    }
-
-    func testBodyMassDefaultDays() {
-        let days = parseDays(from: [:], default: 30)
-        XCTAssertEqual(days, 30)
-    }
-
-    func testParseDaysExplicitOverridesDefault() {
-        let days = parseDays(from: ["days": .int(14)], default: 30)
-        XCTAssertEqual(days, 14)
+        for testCase in cases {
+            XCTAssertEqual(
+                parseDays(from: testCase.args, default: testCase.defaultDays),
+                testCase.expected,
+                testCase.name
+            )
+        }
     }
 
     func testVO2MaxToolNameIsCorrect() {
@@ -47,25 +35,36 @@ final class QueryToolParsingTests: XCTestCase {
         XCTAssertEqual(DeleteScheduledWorkoutTool.toolName, "delete_scheduled_workout")
     }
 
-    func testDeleteScheduledWorkoutParseIndex() {
-        XCTAssertEqual(DeleteScheduledWorkoutTool.parseIndex(from: ["index": .int(2)]), 2)
+    func testDeleteScheduledWorkoutParseIndexAcceptsOnlyIntegers() {
+        let cases: [(name: String, args: [String: Value], expected: Int?)] = [
+            ("integer index is returned", ["index": .int(2)], 2),
+            ("missing index returns nil", [:], nil),
+            ("double index returns nil", ["index": .double(2.0)], nil),
+            ("string index returns nil", ["index": .string("2")], nil)
+        ]
+
+        for testCase in cases {
+            XCTAssertEqual(DeleteScheduledWorkoutTool.parseIndex(from: testCase.args), testCase.expected, testCase.name)
+        }
     }
 
-    func testDeleteScheduledWorkoutParseIndexMissing() {
-        XCTAssertNil(DeleteScheduledWorkoutTool.parseIndex(from: [:]))
-    }
-
-    func testParseStandaloneWorkStepDefaultPurpose() {
+    func testParseStandaloneWorkStepDefaultsAndTargets() {
         let value = Value.object([
+            "display_name": .string("Steady"),
             "goal_type": .string("time"),
-            "goal_value": .int(20)
+            "goal_value": .int(20),
+            "target_pace_seconds_per_mile": .int(480),
+            "target_heart_rate_bpm": .int(150)
         ])
         let block = ScheduleWorkoutTool.parseBlockSpec(from: value)
         XCTAssertNotNil(block)
         XCTAssertEqual(block?.repeatCount, 1)
         XCTAssertEqual(block?.steps.count, 1)
         XCTAssertEqual(block?.steps.first?.purpose, .work)
+        XCTAssertEqual(block?.steps.first?.spec.displayName, "Steady")
         XCTAssertEqual(block?.steps.first?.spec.goalValue, 20.0)
+        XCTAssertEqual(block?.steps.first?.spec.targetPaceSecPerMile, 480.0)
+        XCTAssertEqual(block?.steps.first?.spec.targetHeartRateBpm, 150.0)
     }
 
     func testParseStandaloneRecoveryStep() {
@@ -77,6 +76,17 @@ final class QueryToolParsingTests: XCTestCase {
         let block = ScheduleWorkoutTool.parseBlockSpec(from: value)
         XCTAssertNotNil(block)
         XCTAssertEqual(block?.steps.first?.purpose, .recovery)
+    }
+
+    func testParseStandaloneStepDefaultsGoalTypeAndValue() {
+        let value = Value.object([:])
+
+        let block = ScheduleWorkoutTool.parseBlockSpec(from: value)
+
+        XCTAssertEqual(block?.repeatCount, 1)
+        XCTAssertEqual(block?.steps.first?.purpose, .work)
+        XCTAssertEqual(block?.steps.first?.spec.goalType, "time")
+        XCTAssertEqual(block?.steps.first?.spec.goalValue, 0.0)
     }
 
     func testParseIntervalBlockTwoSteps() {
@@ -92,6 +102,24 @@ final class QueryToolParsingTests: XCTestCase {
         XCTAssertEqual(block?.repeatCount, 4)
         XCTAssertEqual(block?.steps.count, 2)
         XCTAssertEqual(block?.steps[0].purpose, .work)
+        XCTAssertEqual(block?.steps[1].purpose, .recovery)
+    }
+
+    func testParseIntervalBlockConvertsDoubleRepeatCountAndSkipsInvalidSteps() {
+        let value = Value.object([
+            "repeat_count": .double(3.9),
+            "steps": .array([
+                .object(["purpose": .string("work"), "goal_type": .string("distance"), "goal_value": .double(0.5)]),
+                .string("skip me"),
+                .object(["purpose": .string("recovery"), "goal_type": .string("time"), "goal_value": .int(2)])
+            ])
+        ])
+
+        let block = ScheduleWorkoutTool.parseBlockSpec(from: value)
+
+        XCTAssertEqual(block?.repeatCount, 3)
+        XCTAssertEqual(block?.steps.count, 2)
+        XCTAssertEqual(block?.steps[0].spec.goalType, "distance")
         XCTAssertEqual(block?.steps[1].purpose, .recovery)
     }
 
@@ -112,6 +140,11 @@ final class QueryToolParsingTests: XCTestCase {
         let block = ScheduleWorkoutTool.parseBlockSpec(from: value)
         XCTAssertNotNil(block)
         XCTAssertEqual(block?.repeatCount, 1)
+    }
+
+    func testParseIntervalBlockInvalidShapeReturnsNil() {
+        XCTAssertNil(ScheduleWorkoutTool.parseBlockSpec(from: .string("invalid")))
+        XCTAssertNil(ScheduleWorkoutTool.parseBlockSpec(from: .object(["steps": .string("invalid")])))
     }
 
     func testParseIntervalBlockThreeSteps() {

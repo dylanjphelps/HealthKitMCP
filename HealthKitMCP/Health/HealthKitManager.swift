@@ -39,10 +39,6 @@ actor HealthKitManager {
         return status == .shouldRequest
     }
 
-    var isAuthorized: Bool {
-        HKHealthStore.isHealthDataAvailable()
-    }
-
     // MARK: - Workouts
 
     func queryWorkouts(days: Int) async throws -> [WorkoutResult] {
@@ -182,8 +178,6 @@ actor HealthKitManager {
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
         let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -199,7 +193,7 @@ actor HealthKitManager {
                 var dict: [String: Double] = [:]
                 results?.enumerateStatistics(from: start, to: end) { stats, _ in
                     if let sum = stats.sumQuantity() {
-                        dict[formatter.string(from: stats.startDate)] = sum.doubleValue(for: .count())
+                        dict[fullDateString(from: stats.startDate)] = sum.doubleValue(for: .count())
                     }
                 }
                 continuation.resume(returning: dict)
@@ -217,8 +211,6 @@ actor HealthKitManager {
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
         let unit = HKUnit(from: "count/min")
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
         let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -235,7 +227,7 @@ actor HealthKitManager {
                 results?.enumerateStatistics(from: start, to: end) { stats, _ in
                     guard let avg = stats.averageQuantity() else { return }
                     data.append(RestingHRResult(
-                        date: formatter.string(from: stats.startDate),
+                        date: fullDateString(from: stats.startDate),
                         avg_bpm: avg.doubleValue(for: unit),
                         min_bpm: stats.minimumQuantity()?.doubleValue(for: unit),
                         max_bpm: stats.maximumQuantity()?.doubleValue(for: unit)
@@ -256,8 +248,6 @@ actor HealthKitManager {
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
         let unit = HKUnit.secondUnit(with: .milli)
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
         let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -274,7 +264,7 @@ actor HealthKitManager {
                 results?.enumerateStatistics(from: start, to: end) { stats, _ in
                     guard let avg = stats.averageQuantity() else { return }
                     data.append(HRVResult(
-                        date: formatter.string(from: stats.startDate),
+                        date: fullDateString(from: stats.startDate),
                         avg_ms: avg.doubleValue(for: unit),
                         min_ms: stats.minimumQuantity()?.doubleValue(for: unit),
                         max_ms: stats.maximumQuantity()?.doubleValue(for: unit)
@@ -295,8 +285,6 @@ actor HealthKitManager {
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
         let lbsUnit = HKUnit.pound()
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
         let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -313,7 +301,7 @@ actor HealthKitManager {
                 results?.enumerateStatistics(from: start, to: end) { stats, _ in
                     guard let avg = stats.averageQuantity() else { return }
                     let lbs = (avg.doubleValue(for: lbsUnit) * 10).rounded() / 10
-                    data.append(BodyMassResult(date: formatter.string(from: stats.startDate), weight_lbs: lbs))
+                    data.append(BodyMassResult(date: fullDateString(from: stats.startDate), weight_lbs: lbs))
                 }
                 continuation.resume(returning: data)
             }
@@ -350,7 +338,6 @@ actor HealthKitManager {
     func queryVO2Max() async throws -> VO2MaxResult? {
         let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
         let unit = HKUnit(from: "ml/kg*min")
-        let iso = ISO8601DateFormatter()
         let store = self.store
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -366,7 +353,7 @@ actor HealthKitManager {
                     return
                 }
                 continuation.resume(returning: VO2MaxResult(
-                    date: iso.string(from: sample.startDate),
+                    date: timestampString(from: sample.startDate),
                     vo2max_ml_kg_min: sample.quantity.doubleValue(for: unit)
                 ))
             }
@@ -469,6 +456,16 @@ func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
     case .walking: return "walk"
     default: return "segment"
     }
+}
+
+private func fullDateString(from date: Date, calendar: Calendar = .current) -> String {
+    let components = calendar.dateComponents([.year, .month, .day], from: date)
+    return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+}
+
+private func timestampString(from date: Date) -> String {
+    let formatter = ISO8601DateFormatter()
+    return formatter.string(from: date)
 }
 
 private func intervalResults(from workout: HKWorkout) -> [IntervalResult]? {

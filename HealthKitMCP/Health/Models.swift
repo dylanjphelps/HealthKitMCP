@@ -9,7 +9,7 @@ func encodeToJSON<T: Encodable>(_ value: T) throws -> String {
 
 // MARK: - HealthKit result types
 
-struct WorkoutResult: Codable {
+struct WorkoutResult: Codable, Sendable {
     let date: String
     let duration_minutes: Double
     let distance_miles: Double
@@ -32,13 +32,13 @@ struct WorkoutResult: Codable {
     let intervals: [IntervalResult]?
 }
 
-struct SplitResult: Codable {
+struct SplitResult: Codable, Sendable {
     let mile: Int
     let pace_sec_per_mile: Double
     let elapsed_seconds: Double
 }
 
-struct IntervalResult: Codable {
+struct IntervalResult: Codable, Sendable {
     let index: Int
     let type: String
     let duration_seconds: Double
@@ -47,26 +47,26 @@ struct IntervalResult: Codable {
     let avg_heart_rate_bpm: Double?
 }
 
-struct ActivitySummaryResult: Codable {
+struct ActivitySummaryResult: Codable, Sendable {
     let date: String
     let steps: Int
     let active_calories: Double
     let exercise_minutes: Double
 }
 
-struct RestingHRResult: Codable {
+struct RestingHRResult: Codable, Sendable {
     let date: String
     let avg_bpm: Double
     let min_bpm: Double?
     let max_bpm: Double?
 }
 
-struct VO2MaxResult: Codable {
+struct VO2MaxResult: Codable, Sendable {
     let date: String
     let vo2max_ml_kg_min: Double
 }
 
-struct ScheduledWorkoutStepResult: Codable {
+struct ScheduledWorkoutStepResult: Codable, Sendable {
     let purpose: String
     let goal_type: String
     let goal_value: Double?
@@ -75,12 +75,12 @@ struct ScheduledWorkoutStepResult: Codable {
     let display_name: String?
 }
 
-struct ScheduledWorkoutBlockResult: Codable {
+struct ScheduledWorkoutBlockResult: Codable, Sendable {
     let iterations: Int
     let steps: [ScheduledWorkoutStepResult]
 }
 
-struct ScheduledWorkoutResult: Codable {
+struct ScheduledWorkoutResult: Codable, Sendable {
     let index: Int
     let date: String
     let title: String
@@ -103,28 +103,28 @@ struct ScheduledWorkoutResult: Codable {
     }
 }
 
-struct HRVResult: Codable {
+struct HRVResult: Codable, Sendable {
     let date: String
     let avg_ms: Double
     let min_ms: Double?
     let max_ms: Double?
 }
 
-struct SleepStagesResult: Codable {
+struct SleepStagesResult: Codable, Sendable {
     let awake_minutes: Double?
     let rem_minutes: Double?
     let core_minutes: Double?
     let deep_minutes: Double?
 }
 
-struct SleepResult: Codable {
+struct SleepResult: Codable, Sendable {
     let date: String
     let total_sleep_minutes: Double
     let time_in_bed_minutes: Double
     let stages: SleepStagesResult
 }
 
-struct BodyMassResult: Codable {
+struct BodyMassResult: Codable, Sendable {
     let date: String
     let weight_lbs: Double
 }

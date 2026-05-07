@@ -1,5 +1,4 @@
 import Foundation
-import Network
 import WorkoutKit
 
 @MainActor
@@ -12,54 +11,49 @@ final class MCPService: ObservableObject {
     private var mcpServer: HealthKitMCPServer?
     private var httpServer: HTTPServer?
     private var serverTask: Task<Void, Error>?
+    private var serverGeneration = 0
 
     func start() {
         guard !isRunning else { return }
-        Task {
-            workoutKitAuthorized = await WorkoutScheduler.shared.authorizationState == .authorized
-        }
-        Task {
-            healthKitAuthorized = await !HealthKitManager.needsAuthorization()
-        }
+        Task { await refreshAuthorizationStatuses() }
 
         serverTask = Task {
-            var currentServer = HealthKitMCPServer()
-            let http = HTTPServer(transport: currentServer.transport)
-            mcpServer = currentServer
+            let initialServer = HealthKitMCPServer()
+            let http = HTTPServer(transport: initialServer.transport)
             httpServer = http
 
             do {
                 try await http.start()
-                serverAddress = "http://\(localIPAddress() ?? "?"):8080/mcp"
+                serverAddress = "http://\(localIPAddress() ?? "?"):\(HTTPServer.port)/mcp"
                 isRunning = true
+                await launch(server: initialServer, on: http)
 
-                // Provide a resetter so HTTPServer can spin up a fresh MCP server
-                // when a reconnecting client's initialize is rejected as "already initialized".
-                await http.setServerResetter { [weak http] in
-                    let next = HealthKitMCPServer()
-                    guard let http else { return }
-                    await http.updateTransport(next.transport)
-                    Task { try? await next.run() }
+                await http.setServerResetter { [weak self, weak http] in
+                    guard let self, let http else { return }
+                    await self.replaceServer(on: http)
                 }
 
                 while !Task.isCancelled {
-                    do { try await currentServer.run() } catch {}
-                    guard !Task.isCancelled else { break }
-                    let next = HealthKitMCPServer()
-                    await http.updateTransport(next.transport)
-                    currentServer = next
-                    mcpServer = next
+                    try await Task.sleep(for: .seconds(3600))
                 }
             } catch {
+                serverGeneration += 1
                 isRunning = false
+                mcpServer = nil
+                httpServer = nil
+                serverAddress = ""
             }
         }
     }
 
     func stop() {
         serverTask?.cancel()
+        serverTask = nil
+        serverGeneration += 1
         let http = httpServer
+        let server = mcpServer
         Task { await http?.stop() }
+        Task { await server?.transport.disconnect() }
         mcpServer = nil
         httpServer = nil
         isRunning = false
@@ -68,8 +62,16 @@ final class MCPService: ObservableObject {
 
     func requestHealthKitAuth() {
         Task {
-            try? await mcpServer?.requestHealthKitAuthorization()
-            healthKitAuthorized = true
+            do {
+                guard let mcpServer else {
+                    await refreshAuthorizationStatuses()
+                    return
+                }
+                try await mcpServer.requestHealthKitAuthorization()
+            } catch {
+                // Refresh the derived UI state instead of assuming authorization succeeded.
+            }
+            await refreshAuthorizationStatuses()
         }
     }
 
@@ -104,5 +106,41 @@ final class MCPService: ObservableObject {
             ptr = current.pointee.ifa_next
         }
         return address
+    }
+
+    private func refreshAuthorizationStatuses() async {
+        async let workoutAuthorization = WorkoutScheduler.shared.authorizationState
+        async let needsHealthAuthorization = HealthKitManager.needsAuthorization()
+
+        workoutKitAuthorized = await workoutAuthorization == .authorized
+        healthKitAuthorized = await !needsHealthAuthorization
+    }
+
+    private func launch(server: HealthKitMCPServer, on http: HTTPServer) async {
+        serverGeneration += 1
+        let generation = serverGeneration
+        mcpServer = server
+        await http.updateTransport(server.transport)
+
+        Task { [weak self] in
+            do {
+                try await server.run()
+            } catch {}
+
+            guard let self else { return }
+            await self.restartServerIfNeeded(for: generation, on: http)
+        }
+    }
+
+    private func replaceServer(on http: HTTPServer) async {
+        let previousServer = mcpServer
+        let nextServer = HealthKitMCPServer()
+        await launch(server: nextServer, on: http)
+        await previousServer?.transport.disconnect()
+    }
+
+    private func restartServerIfNeeded(for generation: Int, on http: HTTPServer) async {
+        guard isRunning, serverGeneration == generation else { return }
+        await replaceServer(on: http)
     }
 }

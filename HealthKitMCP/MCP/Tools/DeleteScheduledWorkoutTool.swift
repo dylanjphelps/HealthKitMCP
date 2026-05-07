@@ -1,4 +1,3 @@
-import Foundation
 import MCP
 
 enum DeleteScheduledWorkoutTool {
@@ -20,7 +19,7 @@ enum DeleteScheduledWorkoutTool {
     )
 
     static func parseIndex(from args: [String: Value]) -> Int? {
-        args["index"]?.intValue
+        parseInteger(named: "index", from: args)
     }
 
     static func handle(args: [String: Value], manager: WorkoutKitManager) async throws -> String {

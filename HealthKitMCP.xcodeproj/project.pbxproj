@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05C3081F5E8C97C4D8921DDB /* QueryBodyMassTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97BB49147D7B4941E3EE0710 /* QueryBodyMassTool.swift */; };
 		0BC000F7DD48BA3D97661527 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 60106F5ABDEB9BA9F2527F20 /* Assets.xcassets */; };
 		104D8C7D0743319F27CF9B58 /* WorkoutBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC016AAD7381E52DA04A1610 /* WorkoutBuilderTests.swift */; };
 		1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */; };
@@ -17,12 +18,11 @@
 		51A30045C94FCFFE42FB3A00 /* QueryWorkoutsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECD30511D79B99814661EA9 /* QueryWorkoutsTool.swift */; };
 		54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE4495175C870FC90B419F /* Models.swift */; };
 		54EA026903896CFA197F24A5 /* QueryRestingHeartRateTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3052A2FCB100215D06C748B3 /* QueryRestingHeartRateTool.swift */; };
+		5D99BB5FF68989D8F8A25916 /* QueryHRVTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 960804E9160CE0992FFFF6BC /* QueryHRVTool.swift */; };
 		6000C221EB63A175CEC457A7 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */; };
 		736618DA71A1243517A3AAA6 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 63267DFA5C0706B1A6CB09B0 /* MCP */; };
+		7377640C9BAED74090ADABD8 /* QuerySleepTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F31B44415A6F9D4BE4CEA4B /* QuerySleepTool.swift */; };
 		A28BB3E4B5C6FCE6A6DE2E42 /* QueryVO2MaxTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */; };
-		C4A3D4D01E2D4A4EA3986A47 /* QueryHRVTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066D8DFE81AC470FA2CDBCC8 /* QueryHRVTool.swift */; };
-		5A245B16DCA55FF5D8E595B4 /* QueryBodyMassTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9D69064D737ACA080E44BC /* QueryBodyMassTool.swift */; };
-		A7F3C921E8B045D6F2AC1930 /* QuerySleepTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D82E740F1C3A98E7621504 /* QuerySleepTool.swift */; };
 		B028BBDDF4463C83F8D0DC78 /* HTTPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C5FA432DE27EF3274A1B0E6 /* HTTPServer.swift */; };
 		B66F455B2E39D29414FD4987 /* QueryActivitySummaryTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6C296BB0C1495B08B31D70E /* QueryActivitySummaryTool.swift */; };
 		C16BD96DA362DC6864A3D709 /* WorkoutKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */; };
@@ -44,6 +44,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0F31B44415A6F9D4BE4CEA4B /* QuerySleepTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuerySleepTool.swift; sourceTree = "<group>"; };
 		1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutKitManager.swift; sourceTree = "<group>"; };
 		3052A2FCB100215D06C748B3 /* QueryRestingHeartRateTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryRestingHeartRateTool.swift; sourceTree = "<group>"; };
 		350ABF57745F56A56F651D35 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
@@ -53,14 +54,13 @@
 		65999B87C71D2C185970863A /* HealthKitMCP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthKitMCP.entitlements; sourceTree = "<group>"; };
 		6AD29E322CC8457635169049 /* HTTPParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPParserTests.swift; sourceTree = "<group>"; };
 		6FDE4495175C870FC90B419F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7064B4297B3A50657303AD1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8C5FA432DE27EF3274A1B0E6 /* HTTPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPServer.swift; sourceTree = "<group>"; };
 		93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolHelpers.swift; sourceTree = "<group>"; };
+		960804E9160CE0992FFFF6BC /* QueryHRVTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryHRVTool.swift; sourceTree = "<group>"; };
+		97BB49147D7B4941E3EE0710 /* QueryBodyMassTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBodyMassTool.swift; sourceTree = "<group>"; };
 		A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryVO2MaxTool.swift; sourceTree = "<group>"; };
-		066D8DFE81AC470FA2CDBCC8 /* QueryHRVTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryHRVTool.swift; sourceTree = "<group>"; };
-		9D9D69064D737ACA080E44BC /* QueryBodyMassTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBodyMassTool.swift; sourceTree = "<group>"; };
-		B5D82E740F1C3A98E7621504 /* QuerySleepTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuerySleepTool.swift; sourceTree = "<group>"; };
 		A55533F904A8BB5854889040 /* QueryToolParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryToolParsingTests.swift; sourceTree = "<group>"; };
 		A6B350F6E313487F40E099E9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA5724F458BB4B888722BA05 /* QueryScheduledWorkoutsTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryScheduledWorkoutsTool.swift; sourceTree = "<group>"; };
@@ -120,12 +120,12 @@
 			children = (
 				5688051CBA5762A95C17A1CB /* DeleteScheduledWorkoutTool.swift */,
 				F6C296BB0C1495B08B31D70E /* QueryActivitySummaryTool.swift */,
+				97BB49147D7B4941E3EE0710 /* QueryBodyMassTool.swift */,
+				960804E9160CE0992FFFF6BC /* QueryHRVTool.swift */,
 				3052A2FCB100215D06C748B3 /* QueryRestingHeartRateTool.swift */,
 				AA5724F458BB4B888722BA05 /* QueryScheduledWorkoutsTool.swift */,
+				0F31B44415A6F9D4BE4CEA4B /* QuerySleepTool.swift */,
 				A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */,
-				066D8DFE81AC470FA2CDBCC8 /* QueryHRVTool.swift */,
-				9D9D69064D737ACA080E44BC /* QueryBodyMassTool.swift */,
-				B5D82E740F1C3A98E7621504 /* QuerySleepTool.swift */,
 				CECD30511D79B99814661EA9 /* QueryWorkoutsTool.swift */,
 				BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */,
 				93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */,
@@ -225,6 +225,7 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					0AB19BDD762426B13D37AE13 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -286,12 +287,12 @@
 				F93EE3F1523EFF1A784ED15F /* MCPService.swift in Sources */,
 				54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */,
 				B66F455B2E39D29414FD4987 /* QueryActivitySummaryTool.swift in Sources */,
+				05C3081F5E8C97C4D8921DDB /* QueryBodyMassTool.swift in Sources */,
+				5D99BB5FF68989D8F8A25916 /* QueryHRVTool.swift in Sources */,
 				54EA026903896CFA197F24A5 /* QueryRestingHeartRateTool.swift in Sources */,
 				3F84C774696231DE4A25594B /* QueryScheduledWorkoutsTool.swift in Sources */,
+				7377640C9BAED74090ADABD8 /* QuerySleepTool.swift in Sources */,
 				A28BB3E4B5C6FCE6A6DE2E42 /* QueryVO2MaxTool.swift in Sources */,
-				C4A3D4D01E2D4A4EA3986A47 /* QueryHRVTool.swift in Sources */,
-				5A245B16DCA55FF5D8E595B4 /* QueryBodyMassTool.swift in Sources */,
-				A7F3C921E8B045D6F2AC1930 /* QuerySleepTool.swift in Sources */,
 				51A30045C94FCFFE42FB3A00 /* QueryWorkoutsTool.swift in Sources */,
 				1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */,
 				CE523664A9C21A5C3A830FFE /* Server.swift in Sources */,
@@ -387,7 +388,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.user.HealthKitMCPTests;
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HealthKitMCP.app/HealthKitMCP";
 			};
@@ -398,9 +398,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = HealthKitMCP/HealthKitMCP.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DDBV754U66;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = HealthKitMCP/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -409,7 +409,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.user.HealthKitMCP;
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -427,7 +426,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.user.HealthKitMCPTests;
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HealthKitMCP.app/HealthKitMCP";
 			};
@@ -438,9 +436,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = HealthKitMCP/HealthKitMCP.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DDBV754U66;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = HealthKitMCP/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -449,7 +447,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.user.HealthKitMCP;
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

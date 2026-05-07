@@ -80,6 +80,23 @@ final class WorkoutBuilderTests: XCTestCase {
         XCTAssertEqual(decoded.vo2max_ml_kg_min, 52.3, accuracy: 0.001)
     }
 
+    func testRestingHeartRateRoundTrip() throws {
+        let original = RestingHRResult(date: "2026-04-20", avg_bpm: 52.5, min_bpm: 48.0, max_bpm: 57.0)
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(RestingHRResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.date, "2026-04-20")
+        XCTAssertEqual(decoded.avg_bpm, 52.5, accuracy: 0.001)
+        XCTAssertEqual(decoded.min_bpm ?? 0, 48.0, accuracy: 0.001)
+        XCTAssertEqual(decoded.max_bpm ?? 0, 57.0, accuracy: 0.001)
+    }
+
+    func testRestingHeartRateNilFieldsOmittedFromJSON() throws {
+        let original = RestingHRResult(date: "2026-04-20", avg_bpm: 52.5, min_bpm: nil, max_bpm: nil)
+        let json = try encodeToJSON(original)
+        XCTAssertFalse(json.contains("\"min_bpm\""))
+        XCTAssertFalse(json.contains("\"max_bpm\""))
+    }
+
     func testScheduledWorkoutResultRoundTrip() throws {
         let original = ScheduledWorkoutResult(index: 0, date: "2026-05-03", title: "Morning Run", type: "custom")
         let json = try encodeToJSON(original)
@@ -165,6 +182,71 @@ final class WorkoutBuilderTests: XCTestCase {
         let block = BlockSpec(repeatCount: 6, steps: [(.work, work), (.recovery, rest)])
         let desc = await manager.describeWorkout(title: "6x3min", warmup: nil, blocks: [block], cooldown: nil)
         XCTAssertEqual(desc, "6×(3.0min + 1.5min recovery)")
+    }
+
+    func testDescribeWorkoutIncludesWarmupAndCooldown() async {
+        let manager = WorkoutKitManager()
+        let warmup = StepSpec(goalType: "time", goalValue: 10, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil)
+        let work = StepSpec(goalType: "distance", goalValue: 5, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil)
+        let cooldown = StepSpec(goalType: "time", goalValue: 5, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil)
+        let block = BlockSpec(repeatCount: 1, steps: [(.work, work)])
+
+        let desc = await manager.describeWorkout(title: "Long Run", warmup: warmup, blocks: [block], cooldown: cooldown)
+
+        XCTAssertEqual(desc, "10.0min warmup → 5.0mi → 5.0min cooldown")
+    }
+
+    func testStepSpecWorkoutGoalMapsSupportedGoalTypes() {
+        let cases: [(step: StepSpec, expectedType: String, expectedValue: Double?)] = [
+            (StepSpec(goalType: "time", goalValue: 3, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil), "time", 3),
+            (StepSpec(goalType: "distance", goalValue: 2, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil), "distance", 2),
+            (StepSpec(goalType: "open", goalValue: 0, targetPaceSecPerMile: nil, targetHeartRateBpm: nil, displayName: nil), "open", nil)
+        ]
+
+        for testCase in cases {
+            switch testCase.step.workoutGoal {
+            case .time(let value, let unit):
+                XCTAssertEqual(testCase.expectedType, "time")
+                XCTAssertEqual(Measurement(value: value, unit: unit).converted(to: .minutes).value, testCase.expectedValue!, accuracy: 0.001)
+            case .distance(let value, let unit):
+                XCTAssertEqual(testCase.expectedType, "distance")
+                XCTAssertEqual(Measurement(value: value, unit: unit).converted(to: .miles).value, testCase.expectedValue!, accuracy: 0.001)
+            case .open:
+                XCTAssertEqual(testCase.expectedType, "open")
+                XCTAssertNil(testCase.expectedValue)
+            case .energy, .poolSwimDistanceWithTime:
+                XCTFail("Unexpected goal case")
+            @unknown default:
+                XCTFail("Unexpected goal case")
+            }
+        }
+    }
+
+    func testBuildCustomRejectsEmptyBlocks() async {
+        let manager = WorkoutKitManager()
+
+        do {
+            _ = try await manager.buildCustom(title: "Empty", warmup: nil, blocks: [], cooldown: nil)
+            XCTFail("Expected empty blocks to throw")
+        } catch let error as WorkoutError {
+            XCTAssertEqual(error.errorDescription, "blocks array must not be empty")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testBuildCustomRejectsBlockWithoutSteps() async {
+        let manager = WorkoutKitManager()
+        let invalidBlock = BlockSpec(repeatCount: 2, steps: [])
+
+        do {
+            _ = try await manager.buildCustom(title: "Invalid", warmup: nil, blocks: [invalidBlock], cooldown: nil)
+            XCTFail("Expected block without steps to throw")
+        } catch let error as WorkoutError {
+            XCTAssertEqual(error.errorDescription, "each block must contain at least one step")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     // MARK: - Split computation logic

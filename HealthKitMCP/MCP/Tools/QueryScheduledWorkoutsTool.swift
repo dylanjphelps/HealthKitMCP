@@ -1,4 +1,3 @@
-import Foundation
 import MCP
 
 enum QueryScheduledWorkoutsTool {
@@ -13,7 +12,7 @@ enum QueryScheduledWorkoutsTool {
         ])
     )
 
-    static func handle(manager: WorkoutKitManager) async throws -> String {
+    static func handle(args _: [String: Value], manager: WorkoutKitManager) async throws -> String {
         let results = try await manager.queryScheduled()
         return try encodeToJSON(results)
     }

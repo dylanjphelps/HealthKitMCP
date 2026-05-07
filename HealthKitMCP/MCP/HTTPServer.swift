@@ -1,10 +1,12 @@
 import Foundation
+import Dispatch
 import Network
 import MCP
 
 actor HTTPServer {
     static let port: UInt16 = 8080
 
+    private let networkQueue = DispatchQueue(label: "HealthKitMCP.HTTPServer")
     private var transport: StatelessHTTPServerTransport
     private var listener: NWListener?
     private var serverResetter: (@Sendable () async -> Void)?
@@ -34,7 +36,7 @@ actor HTTPServer {
             Task { await self.handleConnection(conn) }
         }
 
-        listener.start(queue: .global())
+        listener.start(queue: networkQueue)
     }
 
     func stop() {
@@ -45,11 +47,15 @@ actor HTTPServer {
     // MARK: - Connection handling
 
     private func handleConnection(_ connection: NWConnection) async {
-        connection.start(queue: .global())
+        connection.start(queue: networkQueue)
 
-        guard let rawData = await readCompleteRequest(from: connection),
-              let request = Self.parseRequest(rawData) else {
+        guard let rawData = await readCompleteRequest(from: connection) else {
             connection.cancel()
+            return
+        }
+
+        guard let request = Self.parseRequest(rawData) else {
+            await writeResponse(.error(statusCode: 400, .parseError("Malformed HTTP request")), to: connection)
             return
         }
 
@@ -179,6 +185,7 @@ actor HTTPServer {
         case 409: "Conflict"
         case 415: "Unsupported Media Type"
         case 421: "Misdirected Request"
+        case 500: "Internal Server Error"
         default: "Error"
         }
     }

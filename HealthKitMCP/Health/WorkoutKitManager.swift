@@ -199,6 +199,10 @@ actor WorkoutKitManager {
             return ("distance", Measurement(value: d, unit: unit).converted(to: .miles).value)
         case .time(let t, let unit):
             return ("time", Measurement(value: t, unit: unit).converted(to: .minutes).value)
+        case .energy(let value, let unit):
+            return ("energy", Measurement(value: value, unit: unit).converted(to: .kilocalories).value)
+        case .poolSwimDistanceWithTime:
+            return ("pool_swim_distance_with_time", nil)
         @unknown default:
             return ("unknown", nil)
         }

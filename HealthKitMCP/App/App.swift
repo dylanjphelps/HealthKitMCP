@@ -8,7 +8,7 @@ struct HealthKitMCPApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(service)
-                .onAppear { service.start() }
+                .task { @MainActor in service.start() }
         }
     }
 }

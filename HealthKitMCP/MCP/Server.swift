@@ -1,9 +1,8 @@
-import Foundation
 import MCP
 
 actor HealthKitMCPServer {
     private let server: Server
-    let transport: StatelessHTTPServerTransport   // non-private for HTTPServer
+    let transport: StatelessHTTPServerTransport
     private let healthKit: HealthKitManager
     private let workoutKit: WorkoutKitManager
 
@@ -68,24 +67,15 @@ actor HealthKitMCPServer {
             case QuerySleepTool.toolName:
                 text = try await QuerySleepTool.handle(args: args, manager: healthKit)
             case QueryScheduledWorkoutsTool.toolName:
-                text = try await QueryScheduledWorkoutsTool.handle(manager: workoutKit)
+                text = try await QueryScheduledWorkoutsTool.handle(args: args, manager: workoutKit)
             case DeleteScheduledWorkoutTool.toolName:
                 text = try await DeleteScheduledWorkoutTool.handle(args: args, manager: workoutKit)
             default:
-                return CallTool.Result(
-                    content: [.text(text: "Unknown tool: \(params.name)", annotations: nil, _meta: nil)],
-                    isError: true
-                )
+                return Self.result(text: "Unknown tool: \(params.name)", isError: true)
             }
-            return CallTool.Result(
-                content: [.text(text: text, annotations: nil, _meta: nil)],
-                isError: false
-            )
+            return Self.result(text: text)
         } catch {
-            return CallTool.Result(
-                content: [.text(text: error.localizedDescription, annotations: nil, _meta: nil)],
-                isError: true
-            )
+            return Self.result(text: error.localizedDescription, isError: true)
         }
     }
 
@@ -103,4 +93,11 @@ actor HealthKitMCPServer {
         QueryScheduledWorkoutsTool.definition,
         DeleteScheduledWorkoutTool.definition,
     ]
+
+    private static func result(text: String, isError: Bool = false) -> CallTool.Result {
+        CallTool.Result(
+            content: [.text(text: text, annotations: nil, _meta: nil)],
+            isError: isError
+        )
+    }
 }
