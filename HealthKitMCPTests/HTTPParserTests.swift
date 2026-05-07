@@ -69,6 +69,43 @@ final class HTTPParserTests: XCTestCase {
         XCTAssertNil(HTTPServer.parseContentLength(from: headerData))
     }
 
+    func testDetectsInitializeJSONRPCRequest() {
+        let body = #"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26"}}"#
+        let request = HTTPRequest(
+            method: "POST",
+            headers: ["Content-Type": "application/json"],
+            body: Data(body.utf8),
+            path: "/mcp"
+        )
+
+        XCTAssertTrue(HTTPServer.isInitializeRequest(request))
+    }
+
+    func testInitializeDetectionIgnoresNonInitializeAndMalformedBodies() {
+        let listToolsRequest = HTTPRequest(
+            method: "POST",
+            headers: ["Content-Type": "application/json"],
+            body: Data(#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#.utf8),
+            path: "/mcp"
+        )
+        let malformedJSONRequest = HTTPRequest(
+            method: "POST",
+            headers: ["Content-Type": "application/json"],
+            body: Data("{".utf8),
+            path: "/mcp"
+        )
+        let getRequest = HTTPRequest(
+            method: "GET",
+            headers: [:],
+            body: Data(#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#.utf8),
+            path: "/mcp"
+        )
+
+        XCTAssertFalse(HTTPServer.isInitializeRequest(listToolsRequest))
+        XCTAssertFalse(HTTPServer.isInitializeRequest(malformedJSONRequest))
+        XCTAssertFalse(HTTPServer.isInitializeRequest(getRequest))
+    }
+
     func testMalformedRequestLineReturnsNil() {
         let data = Data("BADREQUEST\r\n\r\n".utf8)
         XCTAssertNil(HTTPServer.parseRequest(data))

@@ -19,7 +19,12 @@ final class MCPService: ObservableObject {
 
         serverTask = Task {
             let initialServer = HealthKitMCPServer()
-            let http = HTTPServer(transport: initialServer.transport)
+            let http = HTTPServer(
+                transport: initialServer.transport,
+                onReinitialize: { [weak self] in
+                    await self?.prepareFreshSessionTransport()
+                }
+            )
             httpServer = http
 
             do {
@@ -117,11 +122,14 @@ final class MCPService: ObservableObject {
         mcpServer = server
         await http.updateTransport(server.transport)
 
-        Task { [weak self] in
-            do {
-                try await server.run()
-            } catch {}
+        do {
+            try await server.start()
+        } catch {
+            return
+        }
 
+        Task { [weak self] in
+            await server.waitUntilDone()
             guard let self else { return }
             await self.restartServerIfNeeded(for: generation, on: http)
         }
@@ -132,6 +140,11 @@ final class MCPService: ObservableObject {
         let nextServer = HealthKitMCPServer()
         await launch(server: nextServer, on: http)
         await previousServer?.transport.disconnect()
+    }
+
+    private func prepareFreshSessionTransport() async {
+        guard isRunning, let http = httpServer else { return }
+        await replaceServer(on: http)
     }
 
     private func restartServerIfNeeded(for generation: Int, on http: HTTPServer) async {

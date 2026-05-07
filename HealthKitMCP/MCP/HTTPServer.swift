@@ -7,11 +7,17 @@ actor HTTPServer {
     static let port: UInt16 = 8080
 
     private let networkQueue = DispatchQueue(label: "HealthKitMCP.HTTPServer")
+    private let onReinitialize: (@Sendable () async -> Void)?
     private var transport: StatefulHTTPServerTransport
     private var listener: NWListener?
+    private var hasActiveSession = false
 
-    init(transport: StatefulHTTPServerTransport) {
+    init(
+        transport: StatefulHTTPServerTransport,
+        onReinitialize: (@Sendable () async -> Void)? = nil
+    ) {
         self.transport = transport
+        self.onReinitialize = onReinitialize
     }
 
     func updateTransport(_ newTransport: StatefulHTTPServerTransport) {
@@ -52,6 +58,14 @@ actor HTTPServer {
         guard let request = Self.parseRequest(rawData) else {
             await writeResponse(.error(statusCode: 400, .parseError("Malformed HTTP request")), to: connection)
             return
+        }
+
+        if Self.isInitializeRequest(request) {
+            if hasActiveSession {
+                // A new client is connecting while a session exists — rotate the transport.
+                await onReinitialize?()
+            }
+            hasActiveSession = true
         }
 
         let response = await transport.handleRequest(request)
@@ -195,5 +209,17 @@ actor HTTPServer {
             }
         }
         return nil
+    }
+
+    static func isInitializeRequest(_ request: HTTPRequest) -> Bool {
+        guard request.method.caseInsensitiveCompare("POST") == .orderedSame,
+              let body = request.body,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let method = json["method"] as? String
+        else {
+            return false
+        }
+
+        return method == "initialize"
     }
 }

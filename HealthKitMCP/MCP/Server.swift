@@ -30,7 +30,9 @@ actor HealthKitMCPServer {
         try await healthKit.requestAuthorization()
     }
 
-    func run() async throws {
+    /// Register tool handlers and connect the MCP server to the transport.
+    /// Returns once the server is ready to accept requests.
+    func start() async throws {
         await server.withMethodHandler(ListTools.self) { _ in
             ListTools.Result(tools: Self.allTools)
         }
@@ -40,6 +42,10 @@ actor HealthKitMCPServer {
         }
 
         try await server.start(transport: transport)
+    }
+
+    /// Block until the transport disconnects or the server shuts down.
+    func waitUntilDone() async {
         await server.waitUntilCompleted()
     }
 
