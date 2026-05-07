@@ -30,6 +30,43 @@ Keep app signing on automatic signing with `CODE_SIGN_IDENTITY = Apple Developme
 - Hardcoding a personal Apple team ID is not acceptable for shared repo config
 - Leaving the team blank preserves automatic signing while letting each developer pick their own team in Xcode
 
+### Token Optimization & Response Layer Formatting (2026-05-07)
+**Source:** Robin Token & Transport Review
+
+Keep token optimization in the MCP response layer instead of pushing formatting into HealthKit/WorkoutKit managers. Use summary payloads by default for array queries, with opt-in flags for detailed data. Array queries return `{count, limit, results}` envelopes for pagination.
+
+**Implementation notes:**
+- `ToolHelpers.swift` and `Models.swift` add pagination envelopes, summary views, and numeric rounding without changing manager contracts
+- `query_workouts` and `query_scheduled_workouts` default to summary payloads with detail opt-in
+- Establishes reusable convention: summary-by-default + opt-in details for future tool development
+
+### Transport Migration: StatefulHTTPServerTransport (2026-05-07)
+**Source:** Robin Token & Transport Review
+
+Migrate transport stack to the Swift SDK's `StatefulHTTPServerTransport` for Streamable HTTP with session management.
+
+**Implementation notes:**
+- `StatefulHTTPServerTransport` expects `AcceptHeaderValidator(mode: .sseRequired)`, GET SSE streams, `MCP-Session-Id`, and DELETE teardown
+- `HTTPServer.swift` remains a thin socket adapter, preserving existing architecture
+- Removes old duplicate-initialize reset workaround
+
+### Session Rotation on Client Reconnect (2026-05-07)
+**Source:** Robin Session Fix Review
+
+Treat every inbound HTTP POST with JSON-RPC method `initialize` as the start of a new MCP session. Before forwarding the request, `HTTPServer` asks `MCPService` to replace the current `HealthKitMCPServer` with a fresh instance and updated `StatefulHTTPServerTransport`.
+
+**Consequences:**
+- `mcp-remote` reconnects reliably without timing dependencies
+- Session rotation centralized in `MCPService`, `HTTPServer` remains thin adapter
+- Prior active sessions intentionally dropped on new client initialize
+
+### Documentation: Transport & Token Optimization Patterns (2026-05-07)
+**Source:** Nami Documentation Synchronization
+
+Updated `.github/copilot-instructions.md` to reflect architectural changes in transport layer and token optimization patterns. Documentation now describes `StatefulHTTPServerTransport`, session rotation via `onReinitialize`, and token optimization conventions (summary-by-default + opt-in details).
+
+**Note:** This is documentation synchronization only; changes were already implemented. Ensures team reference documentation remains current.
+
 ## Governance
 
 - All meaningful changes require team consensus
