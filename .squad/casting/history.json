@@ -1,0 +1,23 @@
+{
+  "universe_usage_history": [
+    {
+      "universe": "One Piece",
+      "used_at": "2026-05-07T14:23:39Z",
+      "project": "HealthKitMCP"
+    }
+  ],
+  "assignment_cast_snapshots": {
+    "healthkitmcp-onepiece-001": {
+      "assignment_id": "healthkitmcp-onepiece-001",
+      "universe": "One Piece",
+      "created_at": "2026-05-07T14:23:39Z",
+      "agents": [
+        { "name": "Luffy", "role": "Lead" },
+        { "name": "Franky", "role": "iOS Dev" },
+        { "name": "Robin", "role": "MCP Dev" },
+        { "name": "Usopp", "role": "Tester" },
+        { "name": "Nami", "role": "Tech Writer" }
+      ]
+    }
+  }
+}

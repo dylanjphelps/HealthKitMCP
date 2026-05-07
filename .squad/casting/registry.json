@@ -1,0 +1,52 @@
+{
+  "agents": [
+    {
+      "persistent_name": "Luffy",
+      "universe": "One Piece",
+      "role": "Lead",
+      "created_at": "2026-05-07T14:23:39Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Franky",
+      "universe": "One Piece",
+      "role": "iOS Dev",
+      "created_at": "2026-05-07T14:23:39Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Robin",
+      "universe": "One Piece",
+      "role": "MCP Dev",
+      "created_at": "2026-05-07T14:23:39Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Usopp",
+      "universe": "One Piece",
+      "role": "Tester",
+      "created_at": "2026-05-07T14:23:39Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Nami",
+      "universe": "One Piece",
+      "role": "Tech Writer",
+      "created_at": "2026-05-07T14:23:39Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Zoro",
+      "universe": "One Piece",
+      "role": "Lead",
+      "created_at": "2026-05-07T14:23:39Z",
+      "legacy_named": false,
+      "status": "retired"
+    }
+  ]
+}
