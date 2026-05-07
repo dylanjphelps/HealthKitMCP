@@ -11,7 +11,9 @@
 - 2026-05-07T14:34:34.923-05:00 — `HealthKitMCP/App/App.swift` owns a single `@StateObject` `MCPService` and injects it into `ContentView`, so SwiftUI lifecycle changes should stay centered in the app entry point instead of recreating service state in views.
 - 2026-05-07T14:34:34.923-05:00 — `HealthKitMCP/MCP/MCPService.swift` is `@MainActor`, refreshes HealthKit/WorkoutKit authorization state asynchronously for the UI, and coordinates MCP server replacement through `HTTPServer.setServerResetter` plus a `serverGeneration` guard.
 - 2026-05-07T14:34:34.923-05:00 — `HealthKitMCP/Health/HealthKitManager.swift` keeps HealthKit queries actor-isolated and benefits from lightweight date-string helpers instead of sharing formatter instances across async query callbacks; result DTOs live in `HealthKitMCP/Health/Models.swift`.
+- 2026-05-07T14:50:28.085-05:00 — Updated `project.yml` target signing settings to use automatic signing with `Apple Development` and an empty `DEVELOPMENT_TEAM`, so regenerated Xcode projects keep prompting Xcode to resolve the local developer team instead of hardcoding Dylan’s personal team ID.
 
 ## Session Updates
 
 - 2026-05-07T19:34:00Z — iOS/Health review completed. Fixed SwiftUI lifecycle, auth-state refresh, Sendable DTOs, safe formatter captures, WorkoutKit enum cases. All tests passing.
+- 2026-05-07T19:50:00Z — Signing configuration hardened: XcodeGen-based `project.yml` regeneration workflow now preserves automatic signing without hardcoding team IDs.
