@@ -51,7 +51,7 @@ actor HealthKitManager {
         let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
         let store = self.store
 
-        return try await withCheckedThrowingContinuation { continuation in
+        let workouts: [HKWorkout] = try await withCheckedThrowingContinuation { continuation in
             let q = HKSampleQuery(
                 sampleType: HKObjectType.workoutType(),
                 predicate: predicate,
@@ -59,65 +59,69 @@ actor HealthKitManager {
                 sortDescriptors: sort
             ) { _, samples, error in
                 if let error { continuation.resume(throwing: error); return }
-                let iso = ISO8601DateFormatter()
-                let hrUnit = HKUnit(from: "count/min")
-                let results = (samples as? [HKWorkout] ?? []).map { w -> WorkoutResult in
-                        let distMiles = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?
-                            .sumQuantity()?.doubleValue(for: .mile()) ?? 0
-                        let pace = distMiles > 0 ? w.duration / distMiles : 0
-                        let cal = w.statistics(for: HKQuantityType(.activeEnergyBurned))?
-                            .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
-                        let hrStats = w.statistics(for: HKQuantityType(.heartRate))
-                        let hr = hrStats?.averageQuantity()?.doubleValue(for: hrUnit)
-                        let maxHR = hrStats?.maximumQuantity()?.doubleValue(for: hrUnit)
-                        let elevUp = (w.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?
-                            .doubleValue(for: .foot())
-                        let elevDown = (w.metadata?[HKMetadataKeyElevationDescended] as? HKQuantity)?
-                            .doubleValue(for: .foot())
-                        let isIndoor = w.metadata?[HKMetadataKeyIndoorWorkout] as? Bool
-                        let powerStats = w.statistics(for: HKQuantityType(.runningPower))
-                        let avgPower = powerStats?.averageQuantity()?.doubleValue(for: .watt())
-                        let maxPower = powerStats?.maximumQuantity()?.doubleValue(for: .watt())
-                        let steps = w.statistics(for: HKQuantityType(.stepCount))?
-                            .sumQuantity()?.doubleValue(for: .count())
-                        let cadence = steps.map { $0 / w.duration * 60 }
-                        let strideLen = w.statistics(for: HKQuantityType(.runningStrideLength))?
-                            .averageQuantity()?.doubleValue(for: .foot())
-                        let vertOsc = w.statistics(for: HKQuantityType(.runningVerticalOscillation))?
-                            .averageQuantity()?.doubleValue(for: .inch())
-                        let gct = w.statistics(for: HKQuantityType(.runningGroundContactTime))?
-                            .averageQuantity()?.doubleValue(for: HKUnit.secondUnit(with: .milli))
-                        let splits = splitResults(from: w, totalDistance: distMiles)
-                        let intervals = intervalResults(from: w)
-                        return WorkoutResult(
-                            date: iso.string(from: w.startDate),
-                            duration_minutes: w.duration / 60,
-                            distance_miles: distMiles,
-                            pace_sec_per_mile: pace,
-                            avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? $0 : nil },
-                            max_heart_rate_bpm: maxHR.flatMap { $0 > 0 ? $0 : nil },
-                            active_calories: cal,
-                            elevation_ascended_feet: elevUp,
-                            elevation_descended_feet: elevDown,
-                            is_indoor: isIndoor,
-                            avg_running_power_watts: avgPower,
-                            max_running_power_watts: maxPower,
-                            avg_cadence_spm: cadence,
-                            avg_stride_length_feet: strideLen,
-                            avg_vertical_oscillation_inches: vertOsc,
-                            avg_ground_contact_time_ms: gct,
-                            weather_temperature_fahrenheit: (w.metadata?[HKMetadataKeyWeatherTemperature] as? HKQuantity)?
-                                .doubleValue(for: .degreeFahrenheit()),
-                            weather_humidity_percent: (w.metadata?[HKMetadataKeyWeatherHumidity] as? HKQuantity)
-                                .map { $0.doubleValue(for: .percent()) * 100 },
-                            splits: splits,
-                            intervals: intervals
-                        )
-                    }
-                continuation.resume(returning: results)
+                continuation.resume(returning: samples as? [HKWorkout] ?? [])
             }
             store.execute(q)
         }
+
+        let iso = ISO8601DateFormatter()
+        let hrUnit = HKUnit(from: "count/min")
+
+        var results: [WorkoutResult] = []
+        for w in workouts {
+            let distMiles = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?
+                .sumQuantity()?.doubleValue(for: .mile()) ?? 0
+            let pace = distMiles > 0 ? w.duration / distMiles : 0
+            let cal = w.statistics(for: HKQuantityType(.activeEnergyBurned))?
+                .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
+            let hrStats = w.statistics(for: HKQuantityType(.heartRate))
+            let hr = hrStats?.averageQuantity()?.doubleValue(for: hrUnit)
+            let maxHR = hrStats?.maximumQuantity()?.doubleValue(for: hrUnit)
+            let elevUp = (w.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?
+                .doubleValue(for: .foot())
+            let elevDown = (w.metadata?[HKMetadataKeyElevationDescended] as? HKQuantity)?
+                .doubleValue(for: .foot())
+            let isIndoor = w.metadata?[HKMetadataKeyIndoorWorkout] as? Bool
+            let powerStats = w.statistics(for: HKQuantityType(.runningPower))
+            let avgPower = powerStats?.averageQuantity()?.doubleValue(for: .watt())
+            let maxPower = powerStats?.maximumQuantity()?.doubleValue(for: .watt())
+            let steps = w.statistics(for: HKQuantityType(.stepCount))?
+                .sumQuantity()?.doubleValue(for: .count())
+            let cadence = steps.map { $0 / w.duration * 60 }
+            let strideLen = w.statistics(for: HKQuantityType(.runningStrideLength))?
+                .averageQuantity()?.doubleValue(for: .foot())
+            let vertOsc = w.statistics(for: HKQuantityType(.runningVerticalOscillation))?
+                .averageQuantity()?.doubleValue(for: .inch())
+            let gct = w.statistics(for: HKQuantityType(.runningGroundContactTime))?
+                .averageQuantity()?.doubleValue(for: HKUnit.secondUnit(with: .milli))
+            let splits = try await splitResults(from: w, store: store)
+            let intervals = intervalResults(from: w)
+            results.append(WorkoutResult(
+                date: iso.string(from: w.startDate),
+                duration_minutes: w.duration / 60,
+                distance_miles: distMiles,
+                pace_sec_per_mile: pace,
+                avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? $0 : nil },
+                max_heart_rate_bpm: maxHR.flatMap { $0 > 0 ? $0 : nil },
+                active_calories: cal,
+                elevation_ascended_feet: elevUp,
+                elevation_descended_feet: elevDown,
+                is_indoor: isIndoor,
+                avg_running_power_watts: avgPower,
+                max_running_power_watts: maxPower,
+                avg_cadence_spm: cadence,
+                avg_stride_length_feet: strideLen,
+                avg_vertical_oscillation_inches: vertOsc,
+                avg_ground_contact_time_ms: gct,
+                weather_temperature_fahrenheit: (w.metadata?[HKMetadataKeyWeatherTemperature] as? HKQuantity)?
+                    .doubleValue(for: .degreeFahrenheit()),
+                weather_humidity_percent: (w.metadata?[HKMetadataKeyWeatherHumidity] as? HKQuantity)
+                    .map { $0.doubleValue(for: .percent()) * 100 },
+                splits: splits,
+                intervals: intervals
+            ))
+        }
+        return results
     }
 
     // MARK: - Activity Summary
@@ -421,31 +425,70 @@ func sleepResults(from samples: [HKCategorySample], calendar: Calendar = .curren
 
 // MARK: - Workout detail helpers
 
-private func splitResults(from workout: HKWorkout, totalDistance: Double) -> [SplitResult]? {
-    guard totalDistance > 0 else { return nil }
-    let segments = (workout.workoutEvents ?? []).filter { $0.type == .segment }
-    guard !segments.isEmpty else { return nil }
-    // HealthKit auto-lap emits one .segment event per completed mile, so segment index i
-    // corresponds to miles [i, i+1). The last segment covers the fractional remainder.
-    var results: [SplitResult] = []
-    for (i, event) in segments.enumerated() {
-        let duration = event.dateInterval.duration
-        let elapsed = event.dateInterval.end.timeIntervalSince(workout.startDate)
-        let distance: Double
-        if i == segments.count - 1 {
-            let remaining = totalDistance - Double(i)
-            guard remaining >= 0.05 else { continue }
-            distance = remaining
-        } else {
-            distance = 1.0
+private func splitResults(from workout: HKWorkout, store: HKHealthStore) async throws -> [SplitResult]? {
+    let distType = HKQuantityType(.distanceWalkingRunning)
+    let predicate = HKQuery.predicateForObjects(from: workout)
+    let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
+
+    let samples: [HKQuantitySample] = try await withCheckedThrowingContinuation { continuation in
+        let q = HKSampleQuery(
+            sampleType: distType,
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: sort
+        ) { _, results, error in
+            if let error { continuation.resume(throwing: error); return }
+            continuation.resume(returning: results as? [HKQuantitySample] ?? [])
         }
-        results.append(SplitResult(
-            mile: i + 1,
-            pace_sec_per_mile: duration / distance,
+        store.execute(q)
+    }
+
+    guard !samples.isEmpty else { return nil }
+
+    var splits: [SplitResult] = []
+    var cumulativeDistance = 0.0
+    var mileStartDate = workout.startDate
+    var currentMile = 1
+
+    for sample in samples {
+        let sampleDist = sample.quantity.doubleValue(for: .mile())
+        let previousCumulative = cumulativeDistance
+        cumulativeDistance += sampleDist
+
+        while cumulativeDistance >= Double(currentMile) {
+            // Interpolate time at which the mile boundary was crossed
+            let distNeeded = Double(currentMile) - previousCumulative
+            let fractionOfSample = sampleDist > 0 ? distNeeded / sampleDist : 1.0
+            let sampleDuration = sample.endDate.timeIntervalSince(sample.startDate)
+            let timeAtMile = sample.startDate.addingTimeInterval(sampleDuration * fractionOfSample)
+
+            let mileDuration = timeAtMile.timeIntervalSince(mileStartDate)
+            let elapsed = timeAtMile.timeIntervalSince(workout.startDate)
+
+            splits.append(SplitResult(
+                mile: currentMile,
+                pace_sec_per_mile: mileDuration,
+                elapsed_seconds: elapsed
+            ))
+
+            mileStartDate = timeAtMile
+            currentMile += 1
+        }
+    }
+
+    // Final fractional mile
+    let remaining = cumulativeDistance - Double(currentMile - 1)
+    if remaining >= 0.05, let lastSample = samples.last {
+        let elapsed = lastSample.endDate.timeIntervalSince(workout.startDate)
+        let duration = lastSample.endDate.timeIntervalSince(mileStartDate)
+        splits.append(SplitResult(
+            mile: currentMile,
+            pace_sec_per_mile: duration / remaining,
             elapsed_seconds: elapsed
         ))
     }
-    return results.isEmpty ? nil : results
+
+    return splits.isEmpty ? nil : splits
 }
 
 func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
