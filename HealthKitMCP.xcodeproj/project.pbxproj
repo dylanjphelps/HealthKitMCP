@@ -14,6 +14,7 @@
 		1E78FB65A855CF8E21B43A2C /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0F9B60D5839D632FF20383 /* App.swift */; };
 		2C0D6CB5D84C36872A57106D /* DeleteScheduledWorkoutTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5688051CBA5762A95C17A1CB /* DeleteScheduledWorkoutTool.swift */; };
 		3F84C774696231DE4A25594B /* QueryScheduledWorkoutsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5724F458BB4B888722BA05 /* QueryScheduledWorkoutsTool.swift */; };
+		4059A2050473C30625BD5F14 /* RouteElevation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F7E93CA9C4503180CE813F /* RouteElevation.swift */; };
 		4C1E67CA66DA8C50AE0839AD /* ToolHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */; };
 		51A30045C94FCFFE42FB3A00 /* QueryWorkoutsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECD30511D79B99814661EA9 /* QueryWorkoutsTool.swift */; };
 		54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE4495175C870FC90B419F /* Models.swift */; };
@@ -22,6 +23,7 @@
 		6000C221EB63A175CEC457A7 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */; };
 		736618DA71A1243517A3AAA6 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 63267DFA5C0706B1A6CB09B0 /* MCP */; };
 		7377640C9BAED74090ADABD8 /* QuerySleepTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F31B44415A6F9D4BE4CEA4B /* QuerySleepTool.swift */; };
+		74CC4B468B6A39B14F6619A0 /* QueryElevationTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9E4C9CABC0DF1E96CB80E4 /* QueryElevationTool.swift */; };
 		A28BB3E4B5C6FCE6A6DE2E42 /* QueryVO2MaxTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11041FCD645184C7AE4262E /* QueryVO2MaxTool.swift */; };
 		B028BBDDF4463C83F8D0DC78 /* HTTPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C5FA432DE27EF3274A1B0E6 /* HTTPServer.swift */; };
 		B66F455B2E39D29414FD4987 /* QueryActivitySummaryTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6C296BB0C1495B08B31D70E /* QueryActivitySummaryTool.swift */; };
@@ -31,6 +33,7 @@
 		E8411E5AAE75265A36BC4A19 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B350F6E313487F40E099E9 /* ContentView.swift */; };
 		F10F3A70A80E8389E1EDDD71 /* HTTPParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD29E322CC8457635169049 /* HTTPParserTests.swift */; };
 		F93EE3F1523EFF1A784ED15F /* MCPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAFEF1FD1B05F8136FB57ABD /* MCPService.swift */; };
+		FA23598CE4CE26CA5D21C874 /* QueryHeartRateZonesTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 615FFD0FC467DF22045C2FEC /* QueryHeartRateZonesTool.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,12 +53,14 @@
 		350ABF57745F56A56F651D35 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 		5688051CBA5762A95C17A1CB /* DeleteScheduledWorkoutTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteScheduledWorkoutTool.swift; sourceTree = "<group>"; };
 		60106F5ABDEB9BA9F2527F20 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		615FFD0FC467DF22045C2FEC /* QueryHeartRateZonesTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryHeartRateZonesTool.swift; sourceTree = "<group>"; };
 		62DDAF2510C95F53830536B1 /* HealthKitMCPTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HealthKitMCPTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65999B87C71D2C185970863A /* HealthKitMCP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthKitMCP.entitlements; sourceTree = "<group>"; };
 		6AD29E322CC8457635169049 /* HTTPParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPParserTests.swift; sourceTree = "<group>"; };
 		6FDE4495175C870FC90B419F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		6FF87EA3F187CD5E9F256ED5 /* HealthKitMCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthKitMCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7064B4297B3A50657303AD1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		74F7E93CA9C4503180CE813F /* RouteElevation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteElevation.swift; sourceTree = "<group>"; };
 		8C5FA432DE27EF3274A1B0E6 /* HTTPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPServer.swift; sourceTree = "<group>"; };
 		93C59B60F3C0DB0BED1AF6F0 /* ToolHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolHelpers.swift; sourceTree = "<group>"; };
 		960804E9160CE0992FFFF6BC /* QueryHRVTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryHRVTool.swift; sourceTree = "<group>"; };
@@ -67,6 +72,7 @@
 		BAFEF1FD1B05F8136FB57ABD /* MCPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPService.swift; sourceTree = "<group>"; };
 		BB0F9B60D5839D632FF20383 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		BC7F2AF6F6FBAE278E70AFEF /* ScheduleWorkoutTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleWorkoutTool.swift; sourceTree = "<group>"; };
+		BD9E4C9CABC0DF1E96CB80E4 /* QueryElevationTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryElevationTool.swift; sourceTree = "<group>"; };
 		CECD30511D79B99814661EA9 /* QueryWorkoutsTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryWorkoutsTool.swift; sourceTree = "<group>"; };
 		DC016AAD7381E52DA04A1610 /* WorkoutBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutBuilderTests.swift; sourceTree = "<group>"; };
 		F6C296BB0C1495B08B31D70E /* QueryActivitySummaryTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryActivitySummaryTool.swift; sourceTree = "<group>"; };
@@ -121,6 +127,8 @@
 				5688051CBA5762A95C17A1CB /* DeleteScheduledWorkoutTool.swift */,
 				F6C296BB0C1495B08B31D70E /* QueryActivitySummaryTool.swift */,
 				97BB49147D7B4941E3EE0710 /* QueryBodyMassTool.swift */,
+				BD9E4C9CABC0DF1E96CB80E4 /* QueryElevationTool.swift */,
+				615FFD0FC467DF22045C2FEC /* QueryHeartRateZonesTool.swift */,
 				960804E9160CE0992FFFF6BC /* QueryHRVTool.swift */,
 				3052A2FCB100215D06C748B3 /* QueryRestingHeartRateTool.swift */,
 				AA5724F458BB4B888722BA05 /* QueryScheduledWorkoutsTool.swift */,
@@ -147,6 +155,7 @@
 			children = (
 				FCBE4CA693C7F0E989D2ED9D /* HealthKitManager.swift */,
 				6FDE4495175C870FC90B419F /* Models.swift */,
+				74F7E93CA9C4503180CE813F /* RouteElevation.swift */,
 				1E10B36139E3B4E6B945A785 /* WorkoutKitManager.swift */,
 			);
 			path = Health;
@@ -287,12 +296,15 @@
 				54CAC55955D19BC8D7B6B053 /* Models.swift in Sources */,
 				B66F455B2E39D29414FD4987 /* QueryActivitySummaryTool.swift in Sources */,
 				05C3081F5E8C97C4D8921DDB /* QueryBodyMassTool.swift in Sources */,
+				74CC4B468B6A39B14F6619A0 /* QueryElevationTool.swift in Sources */,
 				5D99BB5FF68989D8F8A25916 /* QueryHRVTool.swift in Sources */,
+				FA23598CE4CE26CA5D21C874 /* QueryHeartRateZonesTool.swift in Sources */,
 				54EA026903896CFA197F24A5 /* QueryRestingHeartRateTool.swift in Sources */,
 				3F84C774696231DE4A25594B /* QueryScheduledWorkoutsTool.swift in Sources */,
 				7377640C9BAED74090ADABD8 /* QuerySleepTool.swift in Sources */,
 				A28BB3E4B5C6FCE6A6DE2E42 /* QueryVO2MaxTool.swift in Sources */,
 				51A30045C94FCFFE42FB3A00 /* QueryWorkoutsTool.swift in Sources */,
+				4059A2050473C30625BD5F14 /* RouteElevation.swift in Sources */,
 				1733C385FB0354B30A8D7D45 /* ScheduleWorkoutTool.swift in Sources */,
 				CE523664A9C21A5C3A830FFE /* Server.swift in Sources */,
 				4C1E67CA66DA8C50AE0839AD /* ToolHelpers.swift in Sources */,

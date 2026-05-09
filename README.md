@@ -47,6 +47,8 @@ Keep the app open on your iPhone while using Claude Desktop. Claude will connect
 | Tool | Description |
 |------|-------------|
 | `query_workouts` | Running sessions — distance, pace, HR, calories, elevation, power, cadence, splits, and intervals. Returns summaries by default; use `include_splits`, `include_intervals`, `include_steps` for detailed data. Default limit: 50, max: 500. Pagination supported. |
+| `query_elevation` | Elevation gain and loss for each running workout. Uses native HealthKit metadata (barometric altimeter) when available, falls back to route-based GPS computation for older workouts. Default limit: 50, max: 500. Pagination supported. |
+| `query_heart_rate_zones` | Time spent in each heart rate zone per running workout. Default: 5 zones based on max HR of 185 bpm. Supports custom zone boundaries. Default limit: 50, max: 500. Pagination supported. |
 | `query_activity_summary` | Daily steps, active calories, exercise minutes. Default limit: 50, max: 500. Pagination supported. |
 | `query_resting_heart_rate` | Daily resting HR (avg, min, max). Default limit: 50, max: 500. Pagination supported. |
 | `query_hrv` | Daily heart rate variability — SDNN avg, min, max in milliseconds. Default limit: 50, max: 500. Pagination supported. |

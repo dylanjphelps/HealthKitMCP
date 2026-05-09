@@ -108,12 +108,21 @@ final class WorkoutBuilderTests: XCTestCase {
     }
 
     func testSplitResultRoundTrip() throws {
-        let split = SplitResult(mile: 1, pace_sec_per_mile: 510.0, elapsed_seconds: 510.0)
+        let split = SplitResult(mile: 1, pace_sec_per_mile: 510.0, elapsed_seconds: 510.0, avg_heart_rate_bpm: 155.0)
         let json = try encodeToJSON(split)
         let decoded = try JSONDecoder().decode(SplitResult.self, from: Data(json.utf8))
         XCTAssertEqual(decoded.mile, 1)
         XCTAssertEqual(decoded.pace_sec_per_mile, 510.0)
         XCTAssertEqual(decoded.elapsed_seconds, 510.0)
+        XCTAssertEqual(decoded.avg_heart_rate_bpm, 155.0)
+    }
+
+    func testSplitResultWithNilHeartRateRoundTrip() throws {
+        let split = SplitResult(mile: 2, pace_sec_per_mile: 480.0, elapsed_seconds: 990.0, avg_heart_rate_bpm: nil)
+        let json = try encodeToJSON(split)
+        let decoded = try JSONDecoder().decode(SplitResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.mile, 2)
+        XCTAssertNil(decoded.avg_heart_rate_bpm)
     }
 
     func testIntervalResultRoundTrip() throws {
@@ -131,7 +140,7 @@ final class WorkoutBuilderTests: XCTestCase {
     }
 
     func testWorkoutResultWithSplitsAndIntervalsRoundTrip() throws {
-        let split = SplitResult(mile: 1, pace_sec_per_mile: 510.0, elapsed_seconds: 510.0)
+        let split = SplitResult(mile: 1, pace_sec_per_mile: 510.0, elapsed_seconds: 510.0, avg_heart_rate_bpm: 160.0)
         let interval = IntervalResult(index: 0, type: "run", duration_seconds: 180.0,
                                       distance_miles: nil, pace_sec_per_mile: nil,
                                       avg_heart_rate_bpm: nil)
@@ -163,6 +172,52 @@ final class WorkoutBuilderTests: XCTestCase {
         XCTAssertEqual(decoded.splits?.first?.mile, 1)
         XCTAssertEqual(decoded.intervals?.count, 1)
         XCTAssertEqual(decoded.intervals?.first?.type, "run")
+    }
+
+    func testElevationResultRoundTrip() throws {
+        let original = ElevationResult(date: "2026-05-09T06:00:00Z",
+                                        total_ascent_feet: 245.5, total_descent_feet: 230.1,
+                                        distance_miles: 5.0)
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(ElevationResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.total_ascent_feet, 245.5)
+        XCTAssertEqual(decoded.total_descent_feet, 230.1)
+        XCTAssertEqual(decoded.distance_miles, 5.0)
+    }
+
+    func testElevationResultNilElevationRoundTrip() throws {
+        let original = ElevationResult(date: "2026-05-09T06:00:00Z",
+                                        total_ascent_feet: nil, total_descent_feet: nil,
+                                        distance_miles: 3.1)
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(ElevationResult.self, from: Data(json.utf8))
+        XCTAssertNil(decoded.total_ascent_feet)
+        XCTAssertNil(decoded.total_descent_feet)
+    }
+
+    func testHeartRateZoneDetailRoundTrip() throws {
+        let original = HeartRateZoneDetail(zone: 2, label: "Easy Aerobic",
+                                           range_bpm: "130-148",
+                                           duration_minutes: 20.5, percentage: 45.6)
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(HeartRateZoneDetail.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.zone, 2)
+        XCTAssertEqual(decoded.label, "Easy Aerobic")
+        XCTAssertEqual(decoded.range_bpm, "130-148")
+        XCTAssertEqual(decoded.duration_minutes, 20.5)
+        XCTAssertEqual(decoded.percentage, 45.6)
+    }
+
+    func testWorkoutHeartRateZonesResultRoundTrip() throws {
+        let zone = HeartRateZoneDetail(zone: 1, label: "Recovery", range_bpm: "< 130",
+                                       duration_minutes: 5.0, percentage: 100.0)
+        let original = WorkoutHeartRateZonesResult(date: "2026-05-09T06:00:00Z",
+                                                    duration_minutes: 45.0,
+                                                    distance_miles: 5.3, zones: [zone])
+        let json = try encodeToJSON(original)
+        let decoded = try JSONDecoder().decode(WorkoutHeartRateZonesResult.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.zones.count, 1)
+        XCTAssertEqual(decoded.zones.first?.label, "Recovery")
     }
 
     // MARK: - WorkoutKitManager description

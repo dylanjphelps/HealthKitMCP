@@ -56,6 +56,7 @@ struct SplitResult: Codable, Sendable {
     let mile: Int
     let pace_sec_per_mile: Double
     let elapsed_seconds: Double
+    let avg_heart_rate_bpm: Double?
 }
 
 struct IntervalResult: Codable, Sendable {
@@ -156,6 +157,28 @@ struct BodyMassResult: Codable, Sendable {
     let weight_lbs: Double
 }
 
+struct ElevationResult: Codable, Sendable {
+    let date: String
+    let total_ascent_feet: Double?
+    let total_descent_feet: Double?
+    let distance_miles: Double
+}
+
+struct HeartRateZoneDetail: Codable, Sendable {
+    let zone: Int
+    let label: String
+    let range_bpm: String
+    let duration_minutes: Double
+    let percentage: Double
+}
+
+struct WorkoutHeartRateZonesResult: Codable, Sendable {
+    let date: String
+    let duration_minutes: Double
+    let distance_miles: Double
+    let zones: [HeartRateZoneDetail]
+}
+
 // MARK: - Rounding helpers
 
 extension WorkoutResult {
@@ -200,7 +223,8 @@ extension SplitResult {
         SplitResult(
             mile: mile,
             pace_sec_per_mile: roundedValue(pace_sec_per_mile),
-            elapsed_seconds: roundedValue(elapsed_seconds)
+            elapsed_seconds: roundedValue(elapsed_seconds),
+            avg_heart_rate_bpm: avg_heart_rate_bpm.map { roundedValue($0) }
         )
     }
 }
@@ -337,5 +361,39 @@ extension SleepResult {
 extension BodyMassResult {
     var rounded: BodyMassResult {
         BodyMassResult(date: date, weight_lbs: roundedValue(weight_lbs))
+    }
+}
+
+extension ElevationResult {
+    var rounded: ElevationResult {
+        ElevationResult(
+            date: date,
+            total_ascent_feet: total_ascent_feet.map { roundedValue($0) },
+            total_descent_feet: total_descent_feet.map { roundedValue($0) },
+            distance_miles: roundedValue(distance_miles)
+        )
+    }
+}
+
+extension HeartRateZoneDetail {
+    var rounded: HeartRateZoneDetail {
+        HeartRateZoneDetail(
+            zone: zone,
+            label: label,
+            range_bpm: range_bpm,
+            duration_minutes: roundedValue(duration_minutes),
+            percentage: roundedValue(percentage)
+        )
+    }
+}
+
+extension WorkoutHeartRateZonesResult {
+    var rounded: WorkoutHeartRateZonesResult {
+        WorkoutHeartRateZonesResult(
+            date: date,
+            duration_minutes: roundedValue(duration_minutes),
+            distance_miles: roundedValue(distance_miles),
+            zones: zones.map(\.rounded)
+        )
     }
 }

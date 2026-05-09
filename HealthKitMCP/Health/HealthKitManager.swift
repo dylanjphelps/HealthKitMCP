@@ -1,5 +1,10 @@
 import HealthKit
 import Foundation
+import CoreLocation
+
+enum HealthKitError: Error {
+    case invalidDateRange
+}
 
 actor HealthKitManager {
     private let store = HKHealthStore()
@@ -9,6 +14,7 @@ actor HealthKitManager {
     // HKSampleType subset — used for statusForAuthorizationRequest (excludes activitySummaryType)
     private static let readSampleTypes: Set<HKSampleType> = [
         HKObjectType.workoutType(),
+        HKSeriesType.workoutRoute(),
         HKQuantityType(.restingHeartRate),
         HKQuantityType(.heartRateVariabilitySDNN),
         HKQuantityType(.bodyMass),
@@ -42,27 +48,8 @@ actor HealthKitManager {
     // MARK: - Workouts
 
     func queryWorkouts(days: Int) async throws -> [WorkoutResult] {
-        let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
-        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-            HKQuery.predicateForSamples(withStart: start, end: end),
-            HKQuery.predicateForWorkouts(with: .running)
-        ])
-        let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
         let store = self.store
-
-        let workouts: [HKWorkout] = try await withCheckedThrowingContinuation { continuation in
-            let q = HKSampleQuery(
-                sampleType: HKObjectType.workoutType(),
-                predicate: predicate,
-                limit: HKObjectQueryNoLimit,
-                sortDescriptors: sort
-            ) { _, samples, error in
-                if let error { continuation.resume(throwing: error); return }
-                continuation.resume(returning: samples as? [HKWorkout] ?? [])
-            }
-            store.execute(q)
-        }
+        let workouts = try await fetchRunningWorkouts(days: days)
 
         let iso = ISO8601DateFormatter()
         let hrUnit = HKUnit(from: "count/min")
@@ -129,7 +116,9 @@ actor HealthKitManager {
     func queryActivitySummary(days: Int) async throws -> [ActivitySummaryResult] {
         let calendar = Calendar.current
         let end = Date()
-        let start = calendar.date(byAdding: .day, value: -days, to: end)!
+        guard let start = calendar.date(byAdding: .day, value: -days, to: end) else {
+            throw HealthKitError.invalidDateRange
+        }
 
         async let summaries = fetchActivitySummaries(from: start, to: end)
         async let steps = fetchDailySteps(from: start, to: end)
@@ -210,7 +199,9 @@ actor HealthKitManager {
 
     func queryRestingHeartRate(days: Int) async throws -> [RestingHRResult] {
         let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        guard let start = Calendar.current.date(byAdding: .day, value: -days, to: end) else {
+            throw HealthKitError.invalidDateRange
+        }
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
@@ -247,7 +238,9 @@ actor HealthKitManager {
 
     func queryHRV(days: Int) async throws -> [HRVResult] {
         let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        guard let start = Calendar.current.date(byAdding: .day, value: -days, to: end) else {
+            throw HealthKitError.invalidDateRange
+        }
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
@@ -284,7 +277,9 @@ actor HealthKitManager {
 
     func queryBodyMass(days: Int) async throws -> [BodyMassResult] {
         let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        guard let start = Calendar.current.date(byAdding: .day, value: -days, to: end) else {
+            throw HealthKitError.invalidDateRange
+        }
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let interval = DateComponents(day: 1)
         let anchor = Calendar.current.startOfDay(for: start)
@@ -317,7 +312,9 @@ actor HealthKitManager {
 
     func querySleep(days: Int) async throws -> [SleepResult] {
         let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        guard let start = Calendar.current.date(byAdding: .day, value: -days, to: end) else {
+            throw HealthKitError.invalidDateRange
+        }
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
         let store = self.store
@@ -360,6 +357,103 @@ actor HealthKitManager {
                     date: timestampString(from: sample.startDate),
                     vo2max_ml_kg_min: sample.quantity.doubleValue(for: unit)
                 ))
+            }
+            store.execute(q)
+        }
+    }
+
+    // MARK: - Elevation (metadata with route fallback)
+
+    func queryElevation(days: Int) async throws -> [ElevationResult] {
+        let store = self.store
+        let workouts = try await fetchRunningWorkouts(days: days)
+
+        let iso = ISO8601DateFormatter()
+        var results: [ElevationResult] = []
+
+        for w in workouts {
+            let distMiles = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?
+                .sumQuantity()?.doubleValue(for: .mile()) ?? 0
+            var elevUp = (w.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?
+                .doubleValue(for: .foot())
+            var elevDown = (w.metadata?[HKMetadataKeyElevationDescended] as? HKQuantity)?
+                .doubleValue(for: .foot())
+
+            if elevUp == nil && elevDown == nil {
+                if let routeElev = try await routeElevation(for: w, store: store) {
+                    elevUp = routeElev.ascentFeet
+                    elevDown = routeElev.descentFeet
+                }
+            }
+
+            results.append(ElevationResult(
+                date: iso.string(from: w.startDate),
+                total_ascent_feet: elevUp,
+                total_descent_feet: elevDown,
+                distance_miles: distMiles
+            ))
+        }
+
+        return results
+    }
+
+    // MARK: - Heart Rate Zones
+
+    func queryHeartRateZones(days: Int, boundaries: [Double]?) async throws -> [WorkoutHeartRateZonesResult] {
+        let store = self.store
+        let workouts = try await fetchRunningWorkouts(days: days)
+
+        let iso = ISO8601DateFormatter()
+        let hrUnit = HKUnit(from: "count/min")
+        let zoneBoundaries = boundaries ?? QueryHeartRateZonesTool.defaultBoundaries
+        let zoneLabels = boundaries != nil
+            ? (1...(zoneBoundaries.count + 1)).map { "Zone \($0)" }
+            : QueryHeartRateZonesTool.defaultLabels
+
+        var results: [WorkoutHeartRateZonesResult] = []
+
+        for w in workouts {
+            let distMiles = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?
+                .sumQuantity()?.doubleValue(for: .mile()) ?? 0
+            let hrSamples = try await fetchWorkoutHeartRateSamples(for: w, store: store)
+            let readings: [(bpm: Double, durationSeconds: Double)] = hrSamples.enumerated().map { i, sample in
+                let sampleEnd = i + 1 < hrSamples.count ? hrSamples[i + 1].startDate : w.endDate
+                let duration = sampleEnd.timeIntervalSince(sample.startDate)
+                return (bpm: sample.quantity.doubleValue(for: hrUnit), durationSeconds: max(0, duration))
+            }
+            let zones = computeHeartRateZones(readings: readings, boundaries: zoneBoundaries, labels: zoneLabels)
+            results.append(WorkoutHeartRateZonesResult(
+                date: iso.string(from: w.startDate),
+                duration_minutes: w.duration / 60,
+                distance_miles: distMiles,
+                zones: zones
+            ))
+        }
+
+        return results
+    }
+
+    private func fetchRunningWorkouts(days: Int) async throws -> [HKWorkout] {
+        let end = Date()
+        guard let start = Calendar.current.date(byAdding: .day, value: -days, to: end) else {
+            throw HealthKitError.invalidDateRange
+        }
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            HKQuery.predicateForSamples(withStart: start, end: end),
+            HKQuery.predicateForWorkouts(with: .running)
+        ])
+        let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
+        let store = self.store
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let q = HKSampleQuery(
+                sampleType: HKObjectType.workoutType(),
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: sort
+            ) { _, samples, error in
+                if let error { continuation.resume(throwing: error); return }
+                continuation.resume(returning: samples as? [HKWorkout] ?? [])
             }
             store.execute(q)
         }
@@ -426,13 +520,12 @@ func sleepResults(from samples: [HKCategorySample], calendar: Calendar = .curren
 // MARK: - Workout detail helpers
 
 private func splitResults(from workout: HKWorkout, store: HKHealthStore) async throws -> [SplitResult]? {
-    let distType = HKQuantityType(.distanceWalkingRunning)
     let predicate = HKQuery.predicateForObjects(from: workout)
     let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
 
-    let samples: [HKQuantitySample] = try await withCheckedThrowingContinuation { continuation in
+    async let distanceFetch: [HKQuantitySample] = withCheckedThrowingContinuation { continuation in
         let q = HKSampleQuery(
-            sampleType: distType,
+            sampleType: HKQuantityType(.distanceWalkingRunning),
             predicate: predicate,
             limit: HKObjectQueryNoLimit,
             sortDescriptors: sort
@@ -443,7 +536,23 @@ private func splitResults(from workout: HKWorkout, store: HKHealthStore) async t
         store.execute(q)
     }
 
+    async let hrFetch: [HKQuantitySample] = withCheckedThrowingContinuation { continuation in
+        let q = HKSampleQuery(
+            sampleType: HKQuantityType(.heartRate),
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: sort
+        ) { _, results, error in
+            if let error { continuation.resume(throwing: error); return }
+            continuation.resume(returning: results as? [HKQuantitySample] ?? [])
+        }
+        store.execute(q)
+    }
+
+    let (samples, hrSamples) = try await (distanceFetch, hrFetch)
     guard !samples.isEmpty else { return nil }
+
+    let hrUnit = HKUnit(from: "count/min")
 
     var splits: [SplitResult] = []
     var cumulativeDistance = 0.0
@@ -464,11 +573,13 @@ private func splitResults(from workout: HKWorkout, store: HKHealthStore) async t
 
             let mileDuration = timeAtMile.timeIntervalSince(mileStartDate)
             let elapsed = timeAtMile.timeIntervalSince(workout.startDate)
+            let avgHR = averageHeartRate(from: hrSamples, unit: hrUnit, start: mileStartDate, end: timeAtMile)
 
             splits.append(SplitResult(
                 mile: currentMile,
                 pace_sec_per_mile: mileDuration,
-                elapsed_seconds: elapsed
+                elapsed_seconds: elapsed,
+                avg_heart_rate_bpm: avgHR
             ))
 
             mileStartDate = timeAtMile
@@ -481,14 +592,25 @@ private func splitResults(from workout: HKWorkout, store: HKHealthStore) async t
     if remaining >= 0.05, let lastSample = samples.last {
         let elapsed = lastSample.endDate.timeIntervalSince(workout.startDate)
         let duration = lastSample.endDate.timeIntervalSince(mileStartDate)
+        let avgHR = averageHeartRate(from: hrSamples, unit: hrUnit, start: mileStartDate, end: lastSample.endDate)
         splits.append(SplitResult(
             mile: currentMile,
             pace_sec_per_mile: duration / remaining,
-            elapsed_seconds: elapsed
+            elapsed_seconds: elapsed,
+            avg_heart_rate_bpm: avgHR
         ))
     }
 
     return splits.isEmpty ? nil : splits
+}
+
+/// Compute average heart rate from samples that overlap a time window.
+private func averageHeartRate(from samples: [HKQuantitySample], unit: HKUnit, start: Date, end: Date) -> Double? {
+    let matching = samples.filter { $0.startDate < end && $0.endDate > start }
+    guard !matching.isEmpty else { return nil }
+    let sum = matching.reduce(0.0) { $0 + $1.quantity.doubleValue(for: unit) }
+    let avg = sum / Double(matching.count)
+    return avg > 0 ? avg : nil
 }
 
 func activityTypeLabel(_ type: HKWorkoutActivityType) -> String {
@@ -529,6 +651,113 @@ private func intervalResults(from workout: HKWorkout) -> [IntervalResult]? {
             distance_miles: dist,
             pace_sec_per_mile: pace,
             avg_heart_rate_bpm: hr.flatMap { $0 > 0 ? $0 : nil }
+        )
+    }
+}
+
+// MARK: - Route elevation helpers
+
+private func routeElevation(for workout: HKWorkout, store: HKHealthStore) async throws -> (ascentFeet: Double, descentFeet: Double)? {
+    let routeType = HKSeriesType.workoutRoute()
+    let predicate = HKQuery.predicateForObjects(from: workout)
+
+    let routes: [HKWorkoutRoute] = try await withCheckedThrowingContinuation { continuation in
+        let q = HKSampleQuery(
+            sampleType: routeType,
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: nil
+        ) { _, samples, error in
+            if let error { continuation.resume(throwing: error); return }
+            continuation.resume(returning: samples as? [HKWorkoutRoute] ?? [])
+        }
+        store.execute(q)
+    }
+
+    guard let route = routes.first else { return nil }
+
+    let locations: [CLLocation] = try await withCheckedThrowingContinuation { continuation in
+        var allLocations: [CLLocation] = []
+        var hasResumed = false
+        let q = HKWorkoutRouteQuery(route: route) { _, newLocations, done, error in
+            guard !hasResumed else { return }
+            if let error {
+                hasResumed = true
+                continuation.resume(throwing: error)
+                return
+            }
+            if let newLocations {
+                allLocations.append(contentsOf: newLocations)
+            }
+            if done {
+                hasResumed = true
+                continuation.resume(returning: allLocations)
+            }
+        }
+        store.execute(q)
+    }
+
+    let altitudes = locations
+        .sorted { $0.timestamp < $1.timestamp }
+        .map { $0.altitude }
+    return computeRouteElevation(altitudes: altitudes)
+}
+
+private func fetchWorkoutHeartRateSamples(for workout: HKWorkout, store: HKHealthStore) async throws -> [HKQuantitySample] {
+    let predicate = HKQuery.predicateForObjects(from: workout)
+    let sort = [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
+
+    return try await withCheckedThrowingContinuation { continuation in
+        let q = HKSampleQuery(
+            sampleType: HKQuantityType(.heartRate),
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: sort
+        ) { _, results, error in
+            if let error { continuation.resume(throwing: error); return }
+            continuation.resume(returning: results as? [HKQuantitySample] ?? [])
+        }
+        store.execute(q)
+    }
+}
+
+// MARK: - Pure computation helpers (testable)
+
+func computeHeartRateZones(
+    readings: [(bpm: Double, durationSeconds: Double)],
+    boundaries: [Double],
+    labels: [String]
+) -> [HeartRateZoneDetail] {
+    let zoneCount = boundaries.count + 1
+    var zoneDurations = Array(repeating: 0.0, count: zoneCount)
+
+    for (bpm, duration) in readings {
+        let zoneIndex = boundaries.lastIndex(where: { bpm >= $0 }).map { $0 + 1 } ?? 0
+        zoneDurations[zoneIndex] += duration
+    }
+
+    let totalDuration = zoneDurations.reduce(0, +)
+
+    return (0..<zoneCount).map { i in
+        let rangeStr: String
+        if i == 0 {
+            rangeStr = "< \(Int(boundaries[0]))"
+        } else if i < boundaries.count {
+            rangeStr = "\(Int(boundaries[i - 1]))-\(Int(boundaries[i]) - 1)"
+        } else {
+            rangeStr = ">= \(Int(boundaries.last!))"
+        }
+
+        let label = i < labels.count ? labels[i] : "Zone \(i + 1)"
+        let durationMinutes = zoneDurations[i] / 60.0
+        let percentage = totalDuration > 0 ? (zoneDurations[i] / totalDuration) * 100.0 : 0.0
+
+        return HeartRateZoneDetail(
+            zone: i + 1,
+            label: label,
+            range_bpm: rangeStr,
+            duration_minutes: durationMinutes,
+            percentage: percentage
         )
     }
 }

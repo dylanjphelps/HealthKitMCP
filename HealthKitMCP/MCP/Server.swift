@@ -76,6 +76,10 @@ actor HealthKitMCPServer {
                 text = try await QueryScheduledWorkoutsTool.handle(args: args, manager: workoutKit)
             case DeleteScheduledWorkoutTool.toolName:
                 text = try await DeleteScheduledWorkoutTool.handle(args: args, manager: workoutKit)
+            case QueryElevationTool.toolName:
+                text = try await QueryElevationTool.handle(args: args, manager: healthKit)
+            case QueryHeartRateZonesTool.toolName:
+                text = try await QueryHeartRateZonesTool.handle(args: args, manager: healthKit)
             default:
                 return Self.result(text: "Unknown tool: \(params.name)", isError: true)
             }
@@ -98,6 +102,8 @@ actor HealthKitMCPServer {
         QuerySleepTool.definition,
         QueryScheduledWorkoutsTool.definition,
         DeleteScheduledWorkoutTool.definition,
+        QueryElevationTool.definition,
+        QueryHeartRateZonesTool.definition,
     ]
 
     private static func result(text: String, isError: Bool = false) -> CallTool.Result {

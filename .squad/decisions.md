@@ -67,20 +67,20 @@ Updated `.github/copilot-instructions.md` to reflect architectural changes in tr
 
 **Note:** This is documentation synchronization only; changes were already implemented. Ensures team reference documentation remains current.
 
-### Elevation Query Metadata Simplification (2026-05-09)
-**Source:** Franky Elevation Simplification
+### Elevation Query Metadata First with Route Fallback (2026-05-09)
+**Source:** Franky Elevation Fallback
 
-Use workout metadata (`HKMetadataKeyElevationAscended` / `HKMetadataKeyElevationDescended`) for `queryElevation()` instead of querying `HKWorkoutRoute` samples and computing ascent/descent from route altitudes.
+Use workout metadata (`HKMetadataKeyElevationAscended` / `HKMetadataKeyElevationDescended`) as the primary source for `queryElevation()`, but fall back to querying `HKWorkoutRoute` samples and computing ascent/descent from smoothed route altitudes when metadata is unavailable.
 
 **Rationale:**
 - `queryWorkouts()` already exposes the native elevation values recorded with the workout
 - Apple Watch barometric workout metadata is simpler and more reliable than route-based GPS computation
-- Removes `CoreLocation` dependency and workout-route authorization overhead
+- Older workouts and third-party workouts may lack native ascent/descent metadata even when route points are available
 
 **Impact:**
-- Simplified `queryElevation()` implementation
-- Removed unused route elevation helper functions: `routeElevation()`, `smoothAltitudes()`, `computeRouteElevation()`
-- `HealthKitManager` no longer requires `CoreLocation` import or workout-route authorization read types
+- `queryElevation()` stays simple for modern workouts while preserving compatibility for missing-metadata cases
+- Restores route elevation helper functions: `routeElevation()`, `smoothAltitudes()`, `computeRouteElevation()`
+- `HealthKitManager` requires `CoreLocation` import and workout-route authorization read types for fallback support
 - Heart-rate-zone helpers remain unchanged
 
 ## Governance

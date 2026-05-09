@@ -1,4 +1,5 @@
 import XCTest
+import MCP
 @testable import HealthKitMCP
 
 final class HTTPParserTests: XCTestCase {
