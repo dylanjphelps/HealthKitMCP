@@ -18,3 +18,4 @@
 
 - 2026-05-07T19:34:00Z — iOS/Health review completed. Fixed SwiftUI lifecycle, auth-state refresh, Sendable DTOs, safe formatter captures, WorkoutKit enum cases. All tests passing.
 - 2026-05-07T19:50:00Z — Signing configuration hardened: XcodeGen-based `project.yml` regeneration workflow now preserves automatic signing without hardcoding team IDs.
+- 2026-05-09T20:15:00Z — **Elevation smoothing fix:** GPS altitude smoothing (moving average window 5) + 0.05m threshold is the correct approach for Apple Watch barometric altitude data. Implemented `smoothAltitudes()`, adjusted thresholds iteratively, all 76 tests passing.

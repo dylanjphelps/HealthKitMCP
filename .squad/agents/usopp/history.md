@@ -16,3 +16,4 @@
 ## Session Updates
 
 - 2026-05-07T19:34:00Z — Test review session completed. Added edge-case tests for HTTP parsing, tool arg parsing, workout building, RestingHRResult, StepSpec. Fixed MCPService build-blocker. Full suite passes.
+- 2026-05-09T20:15:00Z — **Elevation smoothing tests:** Wrote comprehensive tests for `smoothAltitudes()` (5 new tests), updated 2 existing elevation tests, added 1 realistic GPS regression test. All 76 tests passing with 0.05m threshold.
