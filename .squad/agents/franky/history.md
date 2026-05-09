@@ -15,6 +15,8 @@
 - 2026-05-07T14:57:36.489-05:00 — Verified `project.yml` already captures all 19 app Swift files under `HealthKitMCP/` and all 3 test Swift files under `HealthKitMCPTests/`; the missing navigator organization was from a stale generated project, and regenerating `HealthKitMCP.xcodeproj` restored the `App`, `Health`, `MCP`, and nested `MCP/Tools` groups with updated source references.
 
 - 2026-05-09T15:23:44.843-05:00 — `HealthKitMCP/Health/HealthKitManager.swift` should source `queryElevation()` ascent/descent from `HKMetadataKeyElevationAscended` and `HKMetadataKeyElevationDescended`, matching `queryWorkouts()` and Dylan's preference to trust native workout metadata over route-derived GPS helpers.
+- 2026-05-09T15:38:32.444-05:00 — `queryElevation()` should prefer native workout elevation metadata first, but fall back to route-based smoothing (`routeElevation()` / `computeRouteElevation()`) when older or third-party workouts have no ascent/descent metadata.
+- 2026-05-09T15:44:59-05:00 — Extracted a shared `fetchRunningWorkouts(days:)` helper in `HealthKitManager` so running-workout queries reuse one guarded date-range + `HKSampleQuery` path, and moved pure altitude smoothing/elevation math into `HealthKitMCP/Health/RouteElevation.swift`.
 
 ## Session Updates
 
@@ -22,3 +24,4 @@
 - 2026-05-07T19:50:00Z — Signing configuration hardened: XcodeGen-based `project.yml` regeneration workflow now preserves automatic signing without hardcoding team IDs.
 - 2026-05-09T20:15:00Z — **Elevation smoothing fix:** GPS altitude smoothing (moving average window 5) + 0.05m threshold is the correct approach for Apple Watch barometric altitude data. Implemented `smoothAltitudes()`, adjusted thresholds iteratively, all 76 tests passing.
 - 2026-05-09T15:23:44Z — **Elevation simplification:** Refactored `queryElevation()` to use native HKMetadata (`HKMetadataKeyElevationAscended`/`HKMetadataKeyElevationDescended`) instead of route-based GPS computation. Removed `routeElevation()`, `smoothAltitudes()`, `computeRouteElevation()`, CoreLocation import, and workout-route auth overhead.
+- 2026-05-09T20:54:57Z — **Refactoring + Cleanup:** Extracted shared `fetchRunningWorkouts(days:)` helper in HealthKitManager to eliminate query-path duplication. Moved pure altitude computation functions into new `HealthKitMCP/Health/RouteElevation.swift`. Guarded all force-unwrapped Calendar dates against nil. Build succeeds.
