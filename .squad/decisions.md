@@ -67,6 +67,22 @@ Updated `.github/copilot-instructions.md` to reflect architectural changes in tr
 
 **Note:** This is documentation synchronization only; changes were already implemented. Ensures team reference documentation remains current.
 
+### Elevation Query Metadata Simplification (2026-05-09)
+**Source:** Franky Elevation Simplification
+
+Use workout metadata (`HKMetadataKeyElevationAscended` / `HKMetadataKeyElevationDescended`) for `queryElevation()` instead of querying `HKWorkoutRoute` samples and computing ascent/descent from route altitudes.
+
+**Rationale:**
+- `queryWorkouts()` already exposes the native elevation values recorded with the workout
+- Apple Watch barometric workout metadata is simpler and more reliable than route-based GPS computation
+- Removes `CoreLocation` dependency and workout-route authorization overhead
+
+**Impact:**
+- Simplified `queryElevation()` implementation
+- Removed unused route elevation helper functions: `routeElevation()`, `smoothAltitudes()`, `computeRouteElevation()`
+- `HealthKitManager` no longer requires `CoreLocation` import or workout-route authorization read types
+- Heart-rate-zone helpers remain unchanged
+
 ## Governance
 
 - All meaningful changes require team consensus
